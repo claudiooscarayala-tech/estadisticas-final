@@ -63,7 +63,7 @@ export default function PointsDetail({ producer }) {
                   <div style={{borderTop: '1px solid rgba(255,255,255,0.05)', marginBottom: '0.5rem'}}></div>
                   <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
                     {item.companies.map((c, i) => (
-                      <div key={i} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: i < item.companies.length -1 ? '1px solid rgba(255,255,255,0.05)' : 'none'}}>
+                      <div key={i} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: i < item.companies.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'}}>
                         <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
                           <div style={{background: 'var(--secondary)', padding: '0.4rem', borderRadius: '6px'}}>
                             <Briefcase size={18} color="var(--text-muted)" />
