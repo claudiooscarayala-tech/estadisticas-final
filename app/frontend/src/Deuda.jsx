@@ -29,7 +29,7 @@ function Deuda({ companyName }) {
     setError("");
 
     try {
-      const response = await api.post("http://localhost:3001/api/deuda/upload", formData, {
+      const response = await api.post("/api/deuda/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

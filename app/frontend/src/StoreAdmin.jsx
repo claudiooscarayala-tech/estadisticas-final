@@ -204,7 +204,7 @@ export default function StoreAdmin() {
                 ) : products.map(p => (
                   <tr key={p.id}>
                     <td>
-                      <img src={`http://localhost:3001${p.image_url}`} alt={p.name} style={{width: "40px", height: "40px", objectFit: "cover", borderRadius: "4px"}} />
+                      <img src={`${p.image_url}`} alt={p.name} style={{width: "40px", height: "40px", objectFit: "cover", borderRadius: "4px"}} />
                     </td>
                     <td style={{fontWeight: "500"}}>{p.name}</td>
                     <td style={{color: "var(--text-muted)", fontSize: "0.85rem"}}>{p.category}</td>

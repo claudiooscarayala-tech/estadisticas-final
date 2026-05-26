@@ -107,7 +107,7 @@ export default function StoreOrders() {
                   <td style={{fontWeight: "600"}}>{o.producer_name}</td>
                   <td>
                     <div style={{display: "flex", alignItems: "center", gap: "0.75rem"}}>
-                      <img src={`http://localhost:3001${o.image_url}`} alt={o.product_name} style={{width: "32px", height: "32px", objectFit: "contain", background: "white", borderRadius: "4px"}} />
+                      <img src={`${o.image_url}`} alt={o.product_name} style={{width: "32px", height: "32px", objectFit: "contain", background: "white", borderRadius: "4px"}} />
                       <span>{o.product_name}</span>
                     </div>
                   </td>

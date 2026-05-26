@@ -28,7 +28,7 @@ function DeudaDigna() {
     setError("");
 
     try {
-      const response = await api.post("http://localhost:3001/api/deuda-digna/upload", formData, {
+      const response = await api.post("/api/deuda-digna/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

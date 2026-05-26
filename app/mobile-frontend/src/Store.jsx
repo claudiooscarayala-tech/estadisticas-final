@@ -108,7 +108,7 @@ export default function Store({ producer }) {
                     AGOTADO
                   </div>
                 )}
-                <img src={`http://localhost:3001${p.image_url}`} alt={p.name} style={{maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: p.stock <= 0 ? 'grayscale(100%)' : 'none'}} />
+                <img src={`${p.image_url}`} alt={p.name} style={{maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: p.stock <= 0 ? 'grayscale(100%)' : 'none'}} />
               </div>
               <div style={{padding: '1.25rem'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem'}}>

@@ -206,7 +206,7 @@ export default function Store() {
                     style={{ height: "180px", padding: "1rem", display: "flex", justifyContent: "center", alignItems: "center", cursor: "pointer" }}
                     onClick={() => setSelectedProduct(product)}
                   >
-                    <img src={`http://localhost:3001${product.image_url}`} alt={product.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", transition: "transform 0.2s" }} onMouseOver={e => e.currentTarget.style.transform = "scale(1.05)"} onMouseOut={e => e.currentTarget.style.transform = "scale(1)"} />
+                    <img src={`${product.image_url}`} alt={product.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", transition: "transform 0.2s" }} onMouseOver={e => e.currentTarget.style.transform = "scale(1.05)"} onMouseOut={e => e.currentTarget.style.transform = "scale(1)"} />
                   </div>
                   
                   <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, borderTop: "1px solid #f1f5f9" }}>
@@ -273,7 +273,7 @@ export default function Store() {
             </button>
             
             <div style={{ flex: "1 1 300px", display: "flex", justifyContent: "center", alignItems: "center", background: "#fff", borderRadius: "0.5rem", padding: "1rem" }}>
-              <img src={`http://localhost:3001${selectedProduct.image_url}`} alt={selectedProduct.name} style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "contain" }} />
+              <img src={`${selectedProduct.image_url}`} alt={selectedProduct.name} style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "contain" }} />
             </div>
 
             <div style={{ flex: "1 1 350px", display: "flex", flexDirection: "column" }}>
