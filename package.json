@@ -1,0 +1,17 @@
+{
+  "name": "estadisticas-de-oficina",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "cd app/frontend && npm run build && cd ../mobile-frontend && npm run build",
+    "start": "cd app/backend && npm start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
