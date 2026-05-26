@@ -49,6 +49,10 @@ app.use("/admin", express.static(path.join(__dirname, "../frontend/dist")));
 // Serve Mobile frontend under /
 app.use(express.static(path.join(__dirname, "../mobile-frontend/dist")));
 
+// FALLBACK: Serve assets for BOTH frontends in case they request /assets directly
+app.use("/assets", express.static(path.join(__dirname, "../frontend/dist/assets")));
+app.use("/assets", express.static(path.join(__dirname, "../mobile-frontend/dist/assets")));
+
 // Handle React Router logic for PC frontend
 app.get("/admin/*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
