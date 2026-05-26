@@ -59,8 +59,34 @@ app.get("/admin/*", (req, res) => {
 });
 
 // Handle React Router logic for Mobile frontend
-app.get("*", (req, res) => {
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
   res.sendFile(path.join(__dirname, "../mobile-frontend/dist", "index.html"));
+});
+
+// DEBUG ENDPOINT
+app.get("/api/debug-uploads", (req, res) => {
+  try {
+    const fs = require('fs');
+    const dataP = process.env.DATA_PATH || 'NOT SET';
+    const dbP = process.env.DB_PATH || 'NOT SET';
+    const upPath = path.join(process.env.DATA_PATH || __dirname, "uploads");
+    
+    let files = [];
+    if (fs.existsSync(upPath)) {
+      files = fs.readdirSync(upPath);
+    }
+    
+    res.json({
+      DATA_PATH: dataP,
+      DB_PATH: dbP,
+      uploadsPath: upPath,
+      exists: fs.existsSync(upPath),
+      files: files
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.listen(PORT, () => {
