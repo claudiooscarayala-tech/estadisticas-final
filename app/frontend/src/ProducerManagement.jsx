@@ -18,7 +18,8 @@ export default function ProducerManagement() {
     address: "",
     city: "",
     province: "",
-    birthdate: ""
+    birthdate: "",
+    dni: ""
   });
 
   useEffect(() => {
@@ -49,7 +50,8 @@ export default function ProducerManagement() {
         address: producer.address || "",
         city: producer.city || "",
         province: producer.province || "",
-        birthdate: producer.birthdate || ""
+        birthdate: producer.birthdate || "",
+        dni: producer.dni || ""
       });
     } else {
       setEditingId(null);
@@ -61,7 +63,8 @@ export default function ProducerManagement() {
         address: "",
         city: "",
         province: "",
-        birthdate: ""
+        birthdate: "",
+        dni: ""
       });
     }
     setIsModalOpen(true);
@@ -213,6 +216,11 @@ export default function ProducerManagement() {
                 <div className="form-group" style={{ marginBottom: '0.5rem' }}>
                   <label className="form-label" style={{ fontSize: '0.85rem' }}>F. Nacimiento</label>
                   <input type="date" className="form-input" style={{ padding: '0.5rem', fontSize: '0.9rem' }} name="birthdate" value={formData.birthdate} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                  <label className="form-label" style={{ fontSize: '0.85rem' }}>DNI</label>
+                  <input type="text" className="form-input" style={{ padding: '0.5rem', fontSize: '0.9rem' }} name="dni" value={formData.dni} onChange={handleInputChange} />
                 </div>
 
                 <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: '0.5rem' }}>
