@@ -41,19 +41,19 @@ router.post("/login", (req, res) => {
 
 // Create a new producer
 router.post("/", (req, res) => {
-  const { name, email, phone, matricula, address, city, province, birthdate } = req.body;
+  const { name, email, phone, matricula, address, city, province, birthdate, dni } = req.body;
   if (!name) {
     return res.status(400).json({ error: "El nombre es obligatorio" });
   }
 
   try {
     const insert = db.prepare(`
-      INSERT INTO producers (name, email, phone, matricula, address, city, province, birthdate) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO producers (name, email, phone, matricula, address, city, province, birthdate, dni) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const info = insert.run(
       name, email || null, phone || null, matricula || null, 
-      address || null, city || null, province || null, birthdate || null
+      address || null, city || null, province || null, birthdate || null, dni || null
     );
     res.status(201).json({ id: info.lastInsertRowid, message: "Productor creado exitosamente" });
   } catch (error) {
@@ -68,7 +68,7 @@ router.post("/", (req, res) => {
 // Update an existing producer
 router.put("/:id", (req, res) => {
   const id = req.params.id;
-  const { name, email, phone, matricula, address, city, province, birthdate } = req.body;
+  const { name, email, phone, matricula, address, city, province, birthdate, dni } = req.body;
   
   if (!name) {
     return res.status(400).json({ error: "El nombre es obligatorio" });
@@ -77,12 +77,12 @@ router.put("/:id", (req, res) => {
   try {
     const update = db.prepare(`
       UPDATE producers 
-      SET name = ?, email = ?, phone = ?, matricula = ?, address = ?, city = ?, province = ?, birthdate = ?
+      SET name = ?, email = ?, phone = ?, matricula = ?, address = ?, city = ?, province = ?, birthdate = ?, dni = ?
       WHERE id = ?
     `);
     const info = update.run(
       name, email || null, phone || null, matricula || null, 
-      address || null, city || null, province || null, birthdate || null, id
+      address || null, city || null, province || null, birthdate || null, dni || null, id
     );
 
     if (info.changes === 0) {
