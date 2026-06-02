@@ -1,5 +1,0 @@
-[providers.node]
-nodeVersion = "18"
-
-[phases.setup]
-aptPkgs = ["python3", "build-essential"]
