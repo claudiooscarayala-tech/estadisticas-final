@@ -44,45 +44,47 @@ const data = [
 ];
 
 async function updateProducers() {
-  console.log("Starting producers update...");
+  console.log("Starting producers update (MATCH BY MATRICULA ONLY)...");
   let updatedCount = 0;
   
   for (const row of data) {
+    if (!row.matricula) continue;
     const matricula = String(row.matricula).trim();
+    
+    // Solo comparar por matrícula
     const producer = db.prepare("SELECT * FROM producers WHERE matricula = ?").get(matricula);
     
     if (producer) {
       let rawProvince = (row.province || "").toLowerCase();
-      let finalProvince = producer.province;
-      if (rawProvince.includes("jujuy")) finalProvince = "Jujuy";
-      else if (rawProvince.includes("salta")) finalProvince = "Salta";
+      let finalProvince = rawProvince.includes("jujuy") ? "Jujuy" : "Salta";
       
-      let rawCity = row.province.split(",")[0] || "";
-      let finalCity = producer.city;
-      if (rawProvince.includes("capital") || rawCity.toLowerCase().includes("capital")) {
-        finalCity = "Salta";
-      } else if (rawCity.toLowerCase() === "salta") {
+      let rawCity = row.province ? row.province.split(",")[0].trim() : "";
+      let finalCity = "Salta";
+      
+      if (rawProvince.includes("capital") || rawCity.toLowerCase().includes("capital") || rawCity.toLowerCase() === "salta") {
         finalCity = "Salta";
       } else if (rawCity) {
         finalCity = rawCity.charAt(0).toUpperCase() + rawCity.slice(1).toLowerCase();
       }
-      if (finalCity === "San salvador de jujuy" || rawProvince.includes("san salvador de jujuy")) finalCity = "San Salvador de Jujuy";
+      if (finalCity.toLowerCase() === "san salvador de jujuy" || rawProvince.includes("san salvador de jujuy")) {
+        finalCity = "San Salvador de Jujuy";
+      }
       
-      let finalBirthdate = producer.birthdate;
-      let rawDate = row.birthdate;
-      if (rawDate) {
-        if (rawDate.includes("-")) {
-           const parts = rawDate.split("-");
+      let finalBirthdate = row.birthdate || producer.birthdate;
+      if (row.birthdate) {
+        if (row.birthdate.includes("-")) {
+           const parts = row.birthdate.split("-");
            if (parts[2] && parts[2].length === 4) finalBirthdate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-        } else if (rawDate.includes("/")) {
-           const parts = rawDate.split("/");
+        } else if (row.birthdate.includes("/")) {
+           const parts = row.birthdate.split("/");
            if (parts[2]) {
              const year = parts[2].length === 2 ? (parseInt(parts[2]) > 30 ? `19${parts[2]}` : `20${parts[2]}`) : parts[2];
              finalBirthdate = `${year}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
            }
         }
       }
-      
+
+      // UPDATE - No tocar nombre ni email
       db.prepare(`
         UPDATE producers 
         SET phone = ?, address = ?, city = ?, province = ?, birthdate = ?, dni = ?
@@ -90,9 +92,9 @@ async function updateProducers() {
       `).run(
         row.phone || producer.phone,
         row.address || producer.address,
-        finalCity,
-        finalProvince,
-        finalBirthdate,
+        finalCity || producer.city,
+        finalProvince || producer.province,
+        finalBirthdate || producer.birthdate,
         row.dni || producer.dni,
         producer.id
       );
@@ -101,7 +103,7 @@ async function updateProducers() {
     }
   }
   
-  console.log(`Successfully updated ${updatedCount} producers.`);
+  console.log(`Successfully updated ${updatedCount} producers strictly by matricula.`);
 }
 
 module.exports = updateProducers;
