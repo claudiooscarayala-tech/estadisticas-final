@@ -50,13 +50,14 @@ async function sendWhatsappMessage(phone, text) {
 }
 
 function getLocalToday() {
-  const options = { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit' };
-  const formatter = new Intl.DateTimeFormat('es-AR', options);
-  const parts = formatter.formatToParts(new Date());
-  const year = parts.find(p => p.type === 'year').value;
-  const month = parts.find(p => p.type === 'month').value;
-  const day = parts.find(p => p.type === 'day').value;
-  return `${year}-${month}-${day}`;
+  // Get date in Argentina Timezone (UTC-3) manually to avoid ICU data issues on Linux
+  const now = new Date();
+  now.setUTCHours(now.getUTCHours() - 3);
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(now.getUTCDate()).padStart(2, '0');
+  const today = `${year}-${month}-${day}`;
+  return today;
 }
 
 // Function to process birthdays for a given date string (YYYY-MM-DD)
