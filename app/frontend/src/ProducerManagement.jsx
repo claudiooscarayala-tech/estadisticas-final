@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import api from "./api";
-import { Users, Plus, Edit2, Save, X } from "lucide-react";
+import { Users, Plus, Edit2, Save, X, Upload } from "lucide-react";
 import toast from "react-hot-toast";
+import Papa from "papaparse";
 
 export default function ProducerManagement() {
   const [producers, setProducers] = useState([]);
@@ -22,9 +23,95 @@ export default function ProducerManagement() {
     dni: ""
   });
 
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     fetchProducers();
   }, []);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const data = results.data;
+        let updatedCount = 0;
+        let notFoundCount = 0;
+        
+        const toastId = toast.loading("Actualizando productores desde CSV...");
+        
+        for (const row of data) {
+          const matricula = row["Matrícula"] || row["Matricula"];
+          if (!matricula) continue;
+          
+          const producer = producers.find(p => String(p.matricula).trim() === String(matricula).trim());
+          if (!producer) {
+            notFoundCount++;
+            continue;
+          }
+          
+          let rawProvince = (row["Provincia"] || row["Ciudad, Provincia."] || row["Ciudad, Provincia"] || "").toLowerCase();
+          let finalProvince = producer.province;
+          if (rawProvince.includes("jujuy")) finalProvince = "Jujuy";
+          else if (rawProvince.includes("salta")) finalProvince = "Salta";
+          
+          let rawCity = row["Ciudad"] || (row["Ciudad, Provincia."] ? row["Ciudad, Provincia."].split(",")[0] : "");
+          let finalCity = producer.city;
+          if (rawCity) {
+            if (rawCity.toLowerCase().includes("capital") || rawCity.toLowerCase() === "salta") {
+              finalCity = "Salta";
+            } else {
+              finalCity = rawCity.charAt(0).toUpperCase() + rawCity.slice(1).toLowerCase();
+            }
+          }
+          
+          let finalBirthdate = producer.birthdate;
+          let rawDate = row["Fecha de N"] || row["Fecha de Nacimiento"];
+          if (rawDate) {
+            if (rawDate.includes("-")) {
+               const parts = rawDate.split("-");
+               if (parts[2] && parts[2].length === 4) finalBirthdate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            } else if (rawDate.includes("/")) {
+               const parts = rawDate.split("/");
+               if (parts[2]) {
+                 const year = parts[2].length === 2 ? (parseInt(parts[2]) > 30 ? `19${parts[2]}` : `20${parts[2]}`) : parts[2];
+                 finalBirthdate = `${year}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+               }
+            }
+          }
+          
+          const updatedData = {
+            name: producer.name,
+            email: producer.email,
+            phone: row["Teléfono"] || row["Telefono"] || producer.phone,
+            matricula: producer.matricula,
+            address: row["Domicilio"] || producer.address,
+            city: finalCity,
+            province: finalProvince,
+            birthdate: finalBirthdate,
+            dni: row["DNI"] || producer.dni
+          };
+          
+          try {
+            await api.put(`/api/producers/${producer.id}`, updatedData);
+            updatedCount++;
+          } catch (err) {
+            console.error(`Error updating producer ${matricula}:`, err);
+          }
+        }
+        
+        toast.success(`Excel procesado: ${updatedCount} actualizados. (${notFoundCount} no encontrados)`, { id: toastId });
+        fetchProducers();
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      },
+      error: (error) => {
+        toast.error("Error al leer el archivo CSV: " + error.message);
+      }
+    });
+  };
 
   const fetchProducers = async () => {
     try {
@@ -123,9 +210,25 @@ export default function ProducerManagement() {
           </h1>
           <p className="subtitle">Administra los datos personales y de contacto de los productores</p>
         </div>
-        <button className="btn" onClick={() => handleOpenModal()}>
-          <Plus size={20} /> Nuevo Productor
-        </button>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <input 
+            type="file" 
+            accept=".csv" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            style={{ display: "none" }} 
+          />
+          <button 
+            className="btn" 
+            style={{ background: "transparent", border: "1px solid var(--border-color)", color: "var(--text-main)" }}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload size={20} /> Importar Excel (.CSV)
+          </button>
+          <button className="btn" onClick={() => handleOpenModal()}>
+            <Plus size={20} /> Nuevo Productor
+          </button>
+        </div>
       </div>
 
       <div className="glass-card" style={{ padding: '1rem', overflowX: 'auto' }}>

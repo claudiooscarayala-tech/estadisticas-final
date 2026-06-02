@@ -2,6 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
+const initDb = require("./init_db");
+
+// Ejecutar init_db al iniciar
+initDb();
+
+// Ejecutar migración de productores (one-time load)
+try {
+  const migrateProducers = require("./scripts/migrate_producers");
+  migrateProducers();
+} catch (err) {
+  console.error("Error running producer migration:", err);
+}
 
 const app = express();
 app.use(cors());
