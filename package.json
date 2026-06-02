@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "install-all": "(cd app/backend || cd App/backend) && npm install && cd ../frontend && npm install && cd ../mobile-frontend && npm install",
-    "build": "npm run install-all && (cd app/frontend || cd App/frontend) && npm run build && cd ../mobile-frontend && npm run build",
-    "start": "(cd app/backend || cd App/backend) && node server.js"
+    "build": "node build.js",
+    "start": "node start.js"
   },
   "keywords": [],
   "author": "",
