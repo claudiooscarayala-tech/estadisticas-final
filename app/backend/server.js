@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
-const initDb = require("./init_db");
+const initDb = require("./initDb");
 
 // Ejecutar init_db al iniciar
 initDb();
