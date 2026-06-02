@@ -140,8 +140,8 @@ export default function StoreOrders() {
                     )}
                   </td>
                   <td>
-                    {o.status !== "delivered" && (
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      {o.status !== "delivered" && (
                         <button 
                           onClick={() => handleDeliver(o.id)}
                           style={{
@@ -152,19 +152,19 @@ export default function StoreOrders() {
                         >
                           Marcar Entregado
                         </button>
-                        <button 
-                          onClick={() => handleCancelOrder(o.id)}
-                          style={{
-                            background: "transparent", color: "var(--danger, #ef4444)", border: "1px solid var(--danger, #ef4444)", 
-                            padding: "0.5rem 1rem", borderRadius: "0.25rem", cursor: "pointer",
-                            fontWeight: "500", fontSize: "0.85rem"
-                          }}
-                          title="Cancelar pedido y devolver puntos al productor"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    )}
+                      )}
+                      <button 
+                        onClick={() => handleCancelOrder(o.id)}
+                        style={{
+                          background: "transparent", color: "var(--danger, #ef4444)", border: "1px solid var(--danger, #ef4444)", 
+                          padding: "0.5rem 1rem", borderRadius: "0.25rem", cursor: "pointer",
+                          fontWeight: "500", fontSize: "0.85rem"
+                        }}
+                        title="Cancelar pedido y devolver puntos al productor"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
