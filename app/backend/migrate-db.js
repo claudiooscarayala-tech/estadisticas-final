@@ -2,12 +2,20 @@ const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
 
-const backupPath = path.join(__dirname, '..', 'products-backup.json');
-const uploadsBackupPath = path.join(__dirname, '..', 'uploads-backup');
+let backupPath = path.join(__dirname, '..', 'products-backup.json');
+if (!fs.existsSync(backupPath)) {
+  backupPath = path.join(__dirname, '..', '..', 'products-backup.json');
+}
+
+let uploadsBackupPath = path.join(__dirname, '..', 'uploads-backup');
+if (!fs.existsSync(uploadsBackupPath)) {
+  uploadsBackupPath = path.join(__dirname, '..', '..', 'uploads-backup');
+}
+
 const uploadsDestPath = path.join(__dirname, 'uploads');
 
 if (!fs.existsSync(backupPath)) {
-  console.log('No backup file found, skipping migration.');
+  console.log('No backup file found at ' + backupPath + ', skipping migration.');
   process.exit(0);
 }
 
