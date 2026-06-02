@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-# Encontrar la carpeta app/App sin importar mayúsculas
-APP_DIR=$(find . -maxdepth 1 -iname "app" -type d | head -n 1)
-
-if [ -z "$APP_DIR" ]; then
+if [ -d "./app" ]; then
+  APP_DIR="./app"
+elif [ -d "./App" ]; then
+  APP_DIR="./App"
+else
   echo "Error: No se encontró la carpeta app"
   exit 1
 fi
