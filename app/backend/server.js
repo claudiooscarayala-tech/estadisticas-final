@@ -35,6 +35,7 @@ const storeRoutes = require("./routes/store");
 const birthdaysRoutes = require("./routes/birthdays");
 const vencimientosRoutes = require("./routes/vencimientos");
 const { initCron } = require("./services/whatsapp");
+const { initBackupCron } = require("./services/backup");
 
 // --- Public Endpoints ---
 app.use("/api/auth", authRoutes);
@@ -52,6 +53,7 @@ app.use("/api/vencimientos", authMiddleware, vencimientosRoutes);
 
 // Initialize Cron Jobs
 initCron();
+initBackupCron();
 
 const PORT = process.env.PORT || 3001;
 const dataPath = process.env.DATA_PATH || __dirname;
