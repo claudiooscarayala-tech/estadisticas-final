@@ -11,6 +11,13 @@ try {
   console.error("Error running producer migration:", err);
 }
 
+// Ejecutar restauración de emergencia de cobranzas
+try {
+  require("./restore_collections");
+} catch (err) {
+  console.error("Error restoring collections:", err);
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
