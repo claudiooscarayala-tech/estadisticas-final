@@ -28,11 +28,12 @@ export default function StoreAdmin() {
     "Llevá el Mundial a tu living",
     "Computadoras, tablets y consolas",
     "Bienestar que elegís",
-    "Tu mochila ideal",
+    "Productos del hogar",
     "Accesorios y Electrónica",
     "Mista Seguros",
     "Paraná Seguros",
-    "BBVA Seguros"
+    "BBVA Seguros",
+    "Sancor Seg"
   ];
 
   const fetchProducts = async () => {

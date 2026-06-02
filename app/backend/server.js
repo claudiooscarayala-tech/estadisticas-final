@@ -64,6 +64,45 @@ app.use("/assets", express.static(path.join(__dirname, "../frontend/dist/assets"
 app.use("/assets", express.static(path.join(__dirname, "../mobile-frontend/dist/assets")));
 
 // Handle React Router logic for PC frontend
+// Ruta de migración de emergencia
+app.get("/api/migrate-db", (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    let logs = [];
+    let backupPath = path.join(__dirname, '..', 'products-backup.json');
+    if (!fs.existsSync(backupPath)) {
+      backupPath = path.join(__dirname, '..', '..', 'products-backup.json');
+    }
+    
+    if (!fs.existsSync(backupPath)) {
+      return res.json({ success: false, error: "No backup file found at " + backupPath, logs });
+    }
+    logs.push("Encontrado backup en: " + backupPath);
+    
+    const products = JSON.parse(fs.readFileSync(backupPath, "utf-8"));
+    const insert = db.prepare(`
+      INSERT OR IGNORE INTO store_products 
+      (id, name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier, image_url, image_url_2, image_url_3) 
+      VALUES (@id, @name, @category, @price_pesos, @price_points, @price_pesos_mixed, @price_points_mixed, @stock, @supplier, @image_url, @image_url_2, @image_url_3)
+    `);
+    
+    let count = 0;
+    for (const p of products) {
+      try {
+        insert.run(p);
+        count++;
+      } catch (err) {
+        logs.push("Error inserting " + p.name + ": " + err.message);
+      }
+    }
+    logs.push("Migrados " + count + " productos.");
+    res.json({ success: true, count, logs });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, stack: err.stack });
+  }
+});
+
 app.get("/admin/*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
 });

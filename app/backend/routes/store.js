@@ -110,6 +110,10 @@ router.delete("/products/:id", (req, res) => {
           }
         }
       }
+      
+      // Delete associated orders first to prevent Foreign Key constraint errors
+      db.prepare("DELETE FROM store_orders WHERE product_id = ?").run(id);
+      
       db.prepare("DELETE FROM store_products WHERE id = ?").run(id);
       res.json({ success: true });
     } else {
@@ -407,6 +411,25 @@ router.put("/orders/:id/deliver", (req, res) => {
   try {
     const id = req.params.id;
     db.prepare("UPDATE store_orders SET status = 'delivered' WHERE id = ?").run(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cancel order and refund points/stock
+router.delete("/orders/:id", (req, res) => {
+  try {
+    const id = req.params.id;
+    db.transaction(() => {
+      const order = db.prepare("SELECT product_id FROM store_orders WHERE id = ?").get(id);
+      if (order) {
+        // Restore stock
+        db.prepare("UPDATE store_products SET stock = stock + 1 WHERE id = ?").run(order.product_id);
+        // Delete order (points are auto-refunded since they are calculated dynamically)
+        db.prepare("DELETE FROM store_orders WHERE id = ?").run(id);
+      }
+    })();
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });

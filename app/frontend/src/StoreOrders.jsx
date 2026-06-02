@@ -34,6 +34,18 @@ export default function StoreOrders() {
     }
   };
 
+  const handleCancelOrder = async (id) => {
+    if (!window.confirm("¿Seguro que quieres cancelar este pedido? Se devolverá el stock y los puntos al productor.")) return;
+    
+    try {
+      await api.delete(`/api/store/orders/${id}`);
+      toast.success("Pedido cancelado y puntos devueltos");
+      fetchOrders();
+    } catch (err) {
+      toast.error("Error al cancelar el pedido");
+    }
+  };
+
   if (loading) return <div className="fade-in">Cargando pedidos...</div>;
 
   return (
@@ -129,16 +141,29 @@ export default function StoreOrders() {
                   </td>
                   <td>
                     {o.status !== "delivered" && (
-                      <button 
-                        onClick={() => handleDeliver(o.id)}
-                        style={{
-                          background: "var(--accent)", color: "white", border: "none", 
-                          padding: "0.5rem 1rem", borderRadius: "0.25rem", cursor: "pointer",
-                          fontWeight: "500", fontSize: "0.85rem"
-                        }}
-                      >
-                        Marcar Entregado
-                      </button>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button 
+                          onClick={() => handleDeliver(o.id)}
+                          style={{
+                            background: "var(--accent)", color: "white", border: "none", 
+                            padding: "0.5rem 1rem", borderRadius: "0.25rem", cursor: "pointer",
+                            fontWeight: "500", fontSize: "0.85rem"
+                          }}
+                        >
+                          Marcar Entregado
+                        </button>
+                        <button 
+                          onClick={() => handleCancelOrder(o.id)}
+                          style={{
+                            background: "transparent", color: "var(--danger, #ef4444)", border: "1px solid var(--danger, #ef4444)", 
+                            padding: "0.5rem 1rem", borderRadius: "0.25rem", cursor: "pointer",
+                            fontWeight: "500", fontSize: "0.85rem"
+                          }}
+                          title="Cancelar pedido y devolver puntos al productor"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
