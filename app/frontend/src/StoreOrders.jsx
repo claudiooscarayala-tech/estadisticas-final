@@ -47,13 +47,13 @@ export default function StoreOrders() {
         <div className="glass-card stat-card delay-1">
           <div className="stat-title"><Activity size={16} style={{display:"inline", marginRight: "8px"}} /> Puntos Consumidos</div>
           <div className="stat-value" style={{color: "var(--accent)"}}>
-            {orders.reduce((acc, o) => acc + (o.points_spent || 0), 0).toLocaleString("es-AR")} pts
+            {orders.reduce((acc, o) => acc + (o.points_spent || 0), 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts
           </div>
         </div>
         <div className="glass-card stat-card delay-2">
           <div className="stat-title"><DollarSign size={16} style={{display:"inline", marginRight: "8px"}} /> Dinero Recaudado (MP)</div>
           <div className="stat-value" style={{color: "#10b981"}}>
-            $ {orders.reduce((acc, o) => acc + (o.pesos_spent || 0), 0).toLocaleString("es-AR")}
+            $ {orders.reduce((acc, o) => acc + (o.pesos_spent || 0), 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </div>
         </div>
         <div className="glass-card stat-card delay-3">
@@ -114,8 +114,8 @@ export default function StoreOrders() {
                   <td style={{color: "var(--text-muted)", fontSize: "0.9rem"}}>
                     {o.payment_type === 'mixed' ? 'Mixto' : o.payment_type === 'full_points' ? 'Solo Puntos' : o.payment_type === 'full_mp' ? 'Mercado Pago' : 'Solo Puntos'}
                   </td>
-                  <td style={{color: "var(--accent)", fontWeight: "600"}}>{(o.points_spent || 0).toLocaleString("es-AR")} pts</td>
-                  <td style={{color: "#10b981", fontWeight: "600"}}>$ {(o.pesos_spent || 0).toLocaleString("es-AR")}</td>
+                  <td style={{color: "var(--accent)", fontWeight: "600"}}>{(o.points_spent || 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts</td>
+                  <td style={{color: "#10b981", fontWeight: "600"}}>$ {(o.pesos_spent || 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
                   <td>
                     {o.status === "delivered" ? (
                       <span style={{background: "rgba(34, 197, 94, 0.2)", color: "#4ade80", padding: "0.25rem 0.5rem", borderRadius: "1rem", fontSize: "0.8rem", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "0.25rem"}}>

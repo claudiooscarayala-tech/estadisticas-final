@@ -13,6 +13,7 @@ import ProducerReport from "./ProducerReport";
 import ProducerManagement from "./ProducerManagement";
 import ProvinceReports from "./ProvinceReports";
 import Deuda from "./Deuda";
+import Vencimiento from "./Vencimiento";
 import Points from "./Points";
 import Store from "./Store";
 import StoreAdmin from "./StoreAdmin";
@@ -23,6 +24,7 @@ function DashboardLayout({ children }) {
   const { logout, user } = useContext(AuthContext);
   const [isProducersOpen, setIsProducersOpen] = useState(false);
   const [isDeudasOpen, setIsDeudasOpen] = useState(false);
+  const [isVencimientosOpen, setIsVencimientosOpen] = useState(false);
   const [isTiendaOpen, setIsTiendaOpen] = useState(false);
 
   return (
@@ -121,6 +123,31 @@ function DashboardLayout({ children }) {
               </NavLink>
             </div>
           )}
+
+          <div 
+            className="nav-link" 
+            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            onClick={() => setIsVencimientosOpen(!isVencimientosOpen)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <FileText size={20} />
+              Gestión de Vencimientos
+            </div>
+            {isVencimientosOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </div>
+          {isVencimientosOpen && (
+            <div style={{ paddingLeft: '2.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '-0.25rem', marginBottom: '0.25rem' }}>
+              <NavLink to="/vencimiento-digna" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                Digna
+              </NavLink>
+              <NavLink to="/vencimiento-sancor" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                Sancor
+              </NavLink>
+              <NavLink to="/vencimiento-parana" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                Paraná
+              </NavLink>
+            </div>
+          )}
         </nav>
         <div style={{ marginTop: "auto", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
           <div style={{ marginBottom: "1rem", color: "var(--text-muted)", fontSize: "0.9rem" }}>
@@ -171,6 +198,10 @@ function App() {
           <Route path="/deuda-digna" element={<ProtectedRoute><DashboardLayout><Deuda companyName="Digna Seguros" /></DashboardLayout></ProtectedRoute>} />
           <Route path="/deuda-sancor" element={<ProtectedRoute><DashboardLayout><Deuda companyName="Sancor Seguros" /></DashboardLayout></ProtectedRoute>} />
           <Route path="/deuda-parana" element={<ProtectedRoute><DashboardLayout><Deuda companyName="Paraná Seguros" /></DashboardLayout></ProtectedRoute>} />
+          
+          <Route path="/vencimiento-digna" element={<ProtectedRoute><DashboardLayout><Vencimiento companyName="Digna Seguros" /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/vencimiento-sancor" element={<ProtectedRoute><DashboardLayout><Vencimiento companyName="Sancor Seguros" /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/vencimiento-parana" element={<ProtectedRoute><DashboardLayout><Vencimiento companyName="Paraná Seguros" /></DashboardLayout></ProtectedRoute>} />
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

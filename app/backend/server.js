@@ -18,6 +18,7 @@ const deudaRoutes = require("./routes/deuda");
 const pointsRoutes = require("./routes/points");
 const storeRoutes = require("./routes/store");
 const birthdaysRoutes = require("./routes/birthdays");
+const vencimientosRoutes = require("./routes/vencimientos");
 const { initCron } = require("./services/whatsapp");
 
 // --- Public Endpoints ---
@@ -32,6 +33,7 @@ app.use("/api/deuda", authMiddleware, deudaRoutes);
 app.use("/api/points", authMiddleware, pointsRoutes);
 app.use("/api/store", authMiddleware, storeRoutes);
 app.use("/api/birthdays", authMiddleware, birthdaysRoutes);
+app.use("/api/vencimientos", authMiddleware, vencimientosRoutes);
 
 // Initialize Cron Jobs
 initCron();
@@ -40,8 +42,16 @@ const PORT = process.env.PORT || 3001;
 const dataPath = process.env.DATA_PATH || __dirname;
 const uploadsPath = path.join(dataPath, "uploads");
 
-// Serve uploaded images statically
-app.use("/uploads", express.static(uploadsPath));
+// Serve uploaded images statically, fallback to production if not found locally
+app.use("/uploads", (req, res, next) => {
+  const localFile = path.join(uploadsPath, req.path);
+  const fs = require("fs");
+  if (fs.existsSync(localFile) && fs.lstatSync(localFile).isFile()) {
+    res.sendFile(localFile);
+  } else {
+    res.redirect(`https://estadisticas-final-production.up.railway.app/uploads${req.path}`);
+  }
+});
 
 // Serve PC frontend under /admin
 app.use("/admin", express.static(path.join(__dirname, "../frontend/dist")));
@@ -84,6 +94,20 @@ app.get("/api/debug-uploads", (req, res) => {
       exists: fs.existsSync(upPath),
       files: files
     });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DUMP DB ENDPOINT (To easily backup production database to local machine)
+app.get("/api/download-db", (req, res) => {
+  try {
+    const dbPath = process.env.DB_PATH || path.join(__dirname, "database.sqlite");
+    if (require("fs").existsSync(dbPath)) {
+      res.download(dbPath, "database.sqlite");
+    } else {
+      res.status(404).send("Database file not found");
+    }
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

@@ -38,35 +38,57 @@ router.get("/products", (req, res) => {
 });
 
 // Create product
-router.post("/products", upload.single("image"), (req, res) => {
+router.post("/products", upload.fields([
+  { name: "image", maxCount: 1 },
+  { name: "image2", maxCount: 1 },
+  { name: "image3", maxCount: 1 }
+]), (req, res) => {
   try {
-    const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock } = req.body;
+    const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier } = req.body;
     
+    const file1 = req.files && req.files["image"] ? req.files["image"][0] : null;
+    const file2 = req.files && req.files["image2"] ? req.files["image2"][0] : null;
+    const file3 = req.files && req.files["image3"] ? req.files["image3"][0] : null;
+
     if (!name || !category || price_pesos === undefined || price_points === undefined) {
-      if (req.file) fs.unlinkSync(req.file.path);
+      if (file1) fs.unlinkSync(file1.path);
+      if (file2) fs.unlinkSync(file2.path);
+      if (file3) fs.unlinkSync(file3.path);
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const imageUrl = file1 ? `/uploads/${file1.filename}` : null;
     if (!imageUrl) {
+      if (file2) fs.unlinkSync(file2.path);
+      if (file3) fs.unlinkSync(file3.path);
       return res.status(400).json({ error: "Image is required" });
     }
 
+    const imageUrl2 = file2 ? `/uploads/${file2.filename}` : null;
+    const imageUrl3 = file3 ? `/uploads/${file3.filename}` : null;
+
     const insert = db.prepare(`
-      INSERT INTO store_products (name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, image_url, stock)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO store_products (name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, image_url, image_url_2, image_url_3, stock, supplier)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     const info = insert.run(
       name, category, 
       parseFloat(price_pesos) || 0, parseInt(price_points) || 0, 
       parseFloat(price_pesos_mixed) || 0, parseInt(price_points_mixed) || 0,
-      imageUrl, parseInt(stock) || 10
+      imageUrl, imageUrl2, imageUrl3, parseInt(stock) || 10, supplier || null
     );
     
     res.json({ success: true, id: info.lastInsertRowid });
   } catch (error) {
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    if (req.files) {
+      const file1 = req.files["image"] ? req.files["image"][0] : null;
+      const file2 = req.files["image2"] ? req.files["image2"][0] : null;
+      const file3 = req.files["image3"] ? req.files["image3"][0] : null;
+      if (file1 && fs.existsSync(file1.path)) fs.unlinkSync(file1.path);
+      if (file2 && fs.existsSync(file2.path)) fs.unlinkSync(file2.path);
+      if (file3 && fs.existsSync(file3.path)) fs.unlinkSync(file3.path);
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -75,13 +97,18 @@ router.post("/products", upload.single("image"), (req, res) => {
 router.delete("/products/:id", (req, res) => {
   try {
     const id = req.params.id;
-    const product = db.prepare("SELECT image_url FROM store_products WHERE id = ?").get(id);
+    const product = db.prepare("SELECT image_url, image_url_2, image_url_3 FROM store_products WHERE id = ?").get(id);
     
     if (product) {
-      const filename = path.basename(product.image_url);
-      const filepath = path.join(__dirname, "..", "uploads", filename);
-      if (fs.existsSync(filepath)) {
-        fs.unlinkSync(filepath);
+      const imagesToDelete = [product.image_url, product.image_url_2, product.image_url_3];
+      for (const imgUrl of imagesToDelete) {
+        if (imgUrl) {
+          const filename = path.basename(imgUrl);
+          const filepath = path.join(__dirname, "..", "uploads", filename);
+          if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);
+          }
+        }
       }
       db.prepare("DELETE FROM store_products WHERE id = ?").run(id);
       res.json({ success: true });
@@ -94,37 +121,69 @@ router.delete("/products/:id", (req, res) => {
 });
 
 // Edit product
-router.put("/products/:id", upload.single("image"), (req, res) => {
+router.put("/products/:id", upload.fields([
+  { name: "image", maxCount: 1 },
+  { name: "image2", maxCount: 1 },
+  { name: "image3", maxCount: 1 }
+]), (req, res) => {
   try {
     const id = req.params.id;
-    const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock } = req.body;
+    const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier } = req.body;
     
+    const file1 = req.files && req.files["image"] ? req.files["image"][0] : null;
+    const file2 = req.files && req.files["image2"] ? req.files["image2"][0] : null;
+    const file3 = req.files && req.files["image3"] ? req.files["image3"][0] : null;
+
     if (!name || !category || price_pesos === undefined || price_points === undefined) {
-      if (req.file) fs.unlinkSync(req.file.path);
+      if (file1) fs.unlinkSync(file1.path);
+      if (file2) fs.unlinkSync(file2.path);
+      if (file3) fs.unlinkSync(file3.path);
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const currentProduct = db.prepare("SELECT image_url FROM store_products WHERE id = ?").get(id);
+    const currentProduct = db.prepare("SELECT image_url, image_url_2, image_url_3 FROM store_products WHERE id = ?").get(id);
     if (!currentProduct) {
-      if (req.file) fs.unlinkSync(req.file.path);
+      if (file1) fs.unlinkSync(file1.path);
+      if (file2) fs.unlinkSync(file2.path);
+      if (file3) fs.unlinkSync(file3.path);
       return res.status(404).json({ error: "Product not found" });
     }
 
     let imageUrl = currentProduct.image_url;
+    let imageUrl2 = currentProduct.image_url_2;
+    let imageUrl3 = currentProduct.image_url_3;
     
-    if (req.file) {
-      // Remove old image
+    // Process image 1
+    if (file1) {
       const oldFilename = path.basename(currentProduct.image_url);
       const oldFilepath = path.join(__dirname, "..", "uploads", oldFilename);
       if (fs.existsSync(oldFilepath)) fs.unlinkSync(oldFilepath);
-      
-      // Set new image
-      imageUrl = `/uploads/${req.file.filename}`;
+      imageUrl = `/uploads/${file1.filename}`;
+    }
+
+    // Process image 2
+    if (file2) {
+      if (currentProduct.image_url_2) {
+        const oldFilename = path.basename(currentProduct.image_url_2);
+        const oldFilepath = path.join(__dirname, "..", "uploads", oldFilename);
+        if (fs.existsSync(oldFilepath)) fs.unlinkSync(oldFilepath);
+      }
+      imageUrl2 = `/uploads/${file2.filename}`;
+    }
+
+    // Process image 3
+    if (file3) {
+      if (currentProduct.image_url_3) {
+        const oldFilename = path.basename(currentProduct.image_url_3);
+        const oldFilepath = path.join(__dirname, "..", "uploads", oldFilename);
+        if (fs.existsSync(oldFilepath)) fs.unlinkSync(oldFilepath);
+      }
+      imageUrl3 = `/uploads/${file3.filename}`;
     }
 
     const update = db.prepare(`
       UPDATE store_products 
-      SET name = ?, category = ?, price_pesos = ?, price_points = ?, price_pesos_mixed = ?, price_points_mixed = ?, image_url = ?, stock = ?
+      SET name = ?, category = ?, price_pesos = ?, price_points = ?, price_pesos_mixed = ?, price_points_mixed = ?, image_url = ?, image_url_2 = ?, image_url_3 = ?, stock = ?, supplier = ?
       WHERE id = ?
     `);
     
@@ -132,11 +191,18 @@ router.put("/products/:id", upload.single("image"), (req, res) => {
       name, category, 
       parseFloat(price_pesos) || 0, parseInt(price_points) || 0,
       parseFloat(price_pesos_mixed) || 0, parseInt(price_points_mixed) || 0,
-      imageUrl, parseInt(stock) || 0, id
+      imageUrl, imageUrl2, imageUrl3, parseInt(stock) || 0, supplier || null, id
     );
     res.json({ success: true });
   } catch (error) {
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    if (req.files) {
+      const file1 = req.files["image"] ? req.files["image"][0] : null;
+      const file2 = req.files["image2"] ? req.files["image2"][0] : null;
+      const file3 = req.files["image3"] ? req.files["image3"][0] : null;
+      if (file1 && fs.existsSync(file1.path)) fs.unlinkSync(file1.path);
+      if (file2 && fs.existsSync(file2.path)) fs.unlinkSync(file2.path);
+      if (file3 && fs.existsSync(file3.path)) fs.unlinkSync(file3.path);
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -347,31 +413,63 @@ router.put("/orders/:id/deliver", (req, res) => {
   }
 });
 
-// Create Mercado Pago Checkout Preference
+// Create Mercado Pago Checkout Preference (supports single and cart checkouts)
 router.post("/checkout", async (req, res) => {
-  const { product_id, producer_id, payment_type = "full_mp", source = "desktop" } = req.body;
+  const { cart_items, product_id, producer_id, payment_type = "full_mp", source = "desktop" } = req.body;
   
-  if (!product_id || !producer_id) {
-    return res.status(400).json({ error: "Missing producer or product ID" });
+  if (!producer_id) {
+    return res.status(400).json({ error: "Missing producer ID" });
   }
 
   try {
-    const product = db.prepare("SELECT id, name, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock FROM store_products WHERE id = ?").get(product_id);
-    if (!product) throw new Error("Producto no encontrado");
-    if (product.stock <= 0) throw new Error("Sin stock disponible");
-
-    const priceToCharge = payment_type === "mixed" ? (product.price_pesos_mixed || 0) : (product.price_pesos || 0);
-    const itemTitle = payment_type === "mixed" ? `${product.name} (Pago Mixto)` : product.name;
-
-    // Create pending order
-    const insert = db.prepare(`
-      INSERT INTO store_orders (producer_id, product_id, points_spent, payment_type, pesos_spent, status)
-      VALUES (?, ?, ?, ?, ?, 'pending_payment')
-    `);
+    const preferenceItems = [];
+    const createdOrderIds = [];
     
-    const pointsSpent = payment_type === "mixed" ? (product.price_points_mixed || 0) : 0;
-    const info = insert.run(producer_id, product_id, pointsSpent, payment_type, priceToCharge);
-    const orderId = info.lastInsertRowid;
+    // Normalize input to always use cart_items format
+    let itemsToProcess = [];
+    if (cart_items && Array.isArray(cart_items)) {
+      itemsToProcess = cart_items;
+    } else if (product_id) {
+      itemsToProcess = [{ product_id, payment_type, quantity: 1 }];
+    } else {
+      return res.status(400).json({ error: "Missing product ID or cart items" });
+    }
+
+    db.transaction(() => {
+      for (const item of itemsToProcess) {
+        const { product_id, payment_type, quantity } = item;
+        const product = db.prepare("SELECT id, name, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock FROM store_products WHERE id = ?").get(product_id);
+        if (!product) throw new Error(`Producto ${product_id} no encontrado`);
+        if (product.stock < quantity) throw new Error(`Sin stock disponible para ${product.name}`);
+
+        const rawPriceToCharge = payment_type === "mixed" ? (product.price_pesos_mixed || 0) : (product.price_pesos || 0);
+        const priceToCharge = Math.ceil(rawPriceToCharge / 100) * 100;
+        const itemTitle = payment_type === "mixed" ? `${product.name} (Pago Mixto)` : product.name;
+
+        // Deduct stock immediately
+        db.prepare("UPDATE store_products SET stock = stock - ? WHERE id = ?").run(quantity, product.id);
+
+        const insert = db.prepare(`
+          INSERT INTO store_orders (producer_id, product_id, points_spent, payment_type, pesos_spent, status)
+          VALUES (?, ?, ?, ?, ?, 'pending_payment')
+        `);
+        
+        const pointsSpent = payment_type === "mixed" ? (product.price_points_mixed || 0) : 0;
+        
+        for (let i = 0; i < quantity; i++) {
+          const info = insert.run(producer_id, product.id, pointsSpent, payment_type, priceToCharge);
+          createdOrderIds.push(info.lastInsertRowid);
+        }
+
+        preferenceItems.push({
+          id: product.id.toString(),
+          title: itemTitle,
+          quantity: Number(quantity),
+          unit_price: Number(priceToCharge),
+          currency_id: "ARS"
+        });
+      }
+    })();
 
     const preference = new Preference(mpClient);
     const host = req.get('host');
@@ -382,26 +480,25 @@ router.post("/checkout", async (req, res) => {
     } else {
       baseUrl = source === 'mobile' ? `https://${host}` : `https://${host}/admin`;
     }
-    
+
+    const orderIdStr = createdOrderIds.join(",");
+
+    const preferenceBody = {
+      items: preferenceItems,
+      back_urls: {
+        success: `${baseUrl}/tienda?status=success&order_id=${orderIdStr}`,
+        failure: `${baseUrl}/tienda?status=failure`,
+        pending: `${baseUrl}/tienda?status=pending`
+      },
+      external_reference: orderIdStr
+    };
+
+    if (!baseUrl.includes('localhost')) {
+      preferenceBody.auto_return = "approved";
+    }
+
     const result = await preference.create({
-      body: {
-        items: [
-          {
-            id: product.id.toString(),
-            title: itemTitle,
-            quantity: 1,
-            unit_price: Number(priceToCharge),
-            currency_id: "ARS"
-          }
-        ],
-        back_urls: {
-          success: `${baseUrl}/tienda?status=success&order_id=${orderId}`,
-          failure: `${baseUrl}/tienda?status=failure`,
-          pending: `${baseUrl}/tienda?status=pending`
-        },
-        auto_return: "approved",
-        external_reference: `${orderId}`
-      }
+      body: preferenceBody
     });
 
     res.json({ init_point: result.init_point });
@@ -411,34 +508,38 @@ router.post("/checkout", async (req, res) => {
   }
 });
 
-// Confirm Mercado Pago payment
+// Confirm Mercado Pago payment (handles single and bulk comma-separated IDs)
 router.put("/orders/:id/confirm-mp", (req, res) => {
   try {
     const id = req.params.id;
-    const order = db.prepare("SELECT * FROM store_orders WHERE id = ?").get(id);
-    if (!order) return res.status(404).json({ error: "Order not found" });
+    const orderIds = id.split(",");
     
-    if (order.status === 'pending_payment') {
-      // Mark as pending (paid, waiting for delivery)
-      db.prepare("UPDATE store_orders SET status = 'pending' WHERE id = ?").run(id);
-      
-      // Send WhatsApp receipt
-      const producer = db.prepare("SELECT name, phone FROM producers WHERE id = ?").get(order.producer_id);
-      const product = db.prepare("SELECT name FROM store_products WHERE id = ?").get(order.product_id);
-      
-      if (producer && producer.phone && product) {
-        let firstName = producer.name.includes(",") ? producer.name.split(",")[1].trim().split(" ")[0] : producer.name.split(" ")[0];
-        firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-        
-        let paymentMsg = `Se abonaron $${order.pesos_spent}`;
-        if (order.payment_type === 'mixed') paymentMsg += ` y ${order.points_spent} puntos.`;
-        else paymentMsg += `.`;
+    db.transaction(() => {
+      for (const orderId of orderIds) {
+        const order = db.prepare("SELECT * FROM store_orders WHERE id = ?").get(orderId);
+        if (order && order.status === 'pending_payment') {
+          // Mark as pending (paid, waiting for delivery)
+          db.prepare("UPDATE store_orders SET status = 'pending' WHERE id = ?").run(orderId);
+          
+          // Send WhatsApp receipt
+          const producer = db.prepare("SELECT name, phone FROM producers WHERE id = ?").get(order.producer_id);
+          const product = db.prepare("SELECT name FROM store_products WHERE id = ?").get(order.product_id);
+          
+          if (producer && producer.phone && product) {
+            let firstName = producer.name.includes(",") ? producer.name.split(",")[1].trim().split(" ")[0] : producer.name.split(" ")[0];
+            firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+            
+            let paymentMsg = `Se abonaron $${order.pesos_spent}`;
+            if (order.payment_type === 'mixed') paymentMsg += ` y ${order.points_spent} puntos.`;
+            else paymentMsg += `.`;
 
-        const message = `¡Hola ${firstName}! 🛍️\n\nConfirmamos tu pago por *${product.name}*.\n${paymentMsg}\n\n¡Te avisaremos cuando esté listo para retirar!`;
-        
-        sendWhatsappMessage(producer.phone, message).catch(err => console.error("Error sending WA receipt:", err.message));
+            const message = `¡Hola ${firstName}! 🛍️\n\nConfirmamos tu pago por *${product.name}*.\n${paymentMsg}\n\n¡Te avisaremos cuando esté listo para retirar!`;
+            
+            sendWhatsappMessage(producer.phone, message).catch(err => console.error("Error sending WA receipt:", err.message));
+          }
+        }
       }
-    }
+    })();
     
     res.json({ success: true });
   } catch (error) {

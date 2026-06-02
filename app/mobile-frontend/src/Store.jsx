@@ -90,7 +90,7 @@ export default function Store({ producer }) {
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
           <h2 style={{fontSize: '1.5rem'}}>Catálogo</h2>
           <div style={{background: 'rgba(59, 130, 246, 0.2)', padding: '0.4rem 1rem', borderRadius: '1rem', color: 'var(--accent)', fontWeight: 600, fontSize: '1.1rem'}}>
-            {balance.toLocaleString('es-AR')} pts
+            {balance.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts
           </div>
         </div>
 
@@ -122,9 +122,9 @@ export default function Store({ producer }) {
                 <h3 style={{fontSize: '1.3rem', marginBottom: '0.5rem'}}>{p.name}</h3>
                 
                 <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem'}}>
-                  <span style={{fontWeight: 700, fontSize: '1.3rem'}}>{(p.price_points_mixed || 0).toLocaleString('es-AR')} pts</span>
+                  <span style={{fontWeight: 700, fontSize: '1.3rem'}}>{(p.price_points_mixed || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts</span>
                   <span style={{color: 'var(--text-muted)'}}>+</span>
-                  <span style={{color: '#10b981', fontWeight: 600, fontSize: '1.2rem'}}>${(p.price_pesos_mixed || 0).toLocaleString('es-AR')}</span>
+                  <span style={{color: '#10b981', fontWeight: 600, fontSize: '1.2rem'}}>${(p.price_pesos_mixed || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
             </div>
@@ -153,14 +153,14 @@ export default function Store({ producer }) {
               <button onClick={() => handleBuy(selectedProduct, 'mixed')} style={{display: 'flex', flexDirection: 'column', padding: '1.25rem', height: 'auto', gap: '0.35rem'}}>
                 <span style={{fontSize: '1.2rem', fontWeight: 600}}>Pagar con Puntos y MP</span>
                 <span style={{fontSize: '1.2rem', fontWeight: 600}}>
-                  {(selectedProduct.price_points_mixed || 0).toLocaleString('es-AR')} pts + ${(selectedProduct.price_pesos_mixed || 0).toLocaleString('es-AR')}
+                  {(selectedProduct.price_points_mixed || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts + ${(selectedProduct.price_pesos_mixed || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
               </button>
               
               <button onClick={() => handleBuy(selectedProduct, 'full_mp')} className="secondary" style={{display: 'flex', flexDirection: 'column', padding: '1.25rem', height: 'auto', gap: '0.35rem'}}>
                 <span style={{fontSize: '1.2rem', fontWeight: 600}}>Pagar solo con Mercado Pago</span>
                 <span style={{fontSize: '1.2rem', fontWeight: 600}}>
-                  ${(selectedProduct.price_pesos || 0).toLocaleString('es-AR')}
+                  ${(selectedProduct.price_pesos || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
               </button>
 
@@ -172,7 +172,7 @@ export default function Store({ producer }) {
               >
                 <span style={{fontSize: '1.2rem', fontWeight: 600}}>Pagar solo con Puntos</span>
                 <span style={{fontSize: '1.2rem', fontWeight: 600, color: balance >= selectedProduct.price_points ? '#10b981' : 'var(--danger)'}}>
-                  {(selectedProduct.price_points || 0).toLocaleString('es-AR')} pts
+                  {(selectedProduct.price_points || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts
                 </span>
               </button>
             </div>
