@@ -68,6 +68,7 @@ export default function Dashboard() {
       setBirthdays(bdaysRes.data);
     } catch (err) {
       console.error(err);
+      import("react-hot-toast").then(toast => toast.default.error("Error cargando dashboard: " + (err.response?.data?.error || err.message)));
     } finally {
       setLoading(false);
     }
@@ -87,7 +88,7 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) return <div className="page-title fade-in">Cargando reporte...</div>;
+  if (loading || !data) return <div className="page-title fade-in">Cargando reporte...</div>;
 
   const formatCurrency = (val) => {
     if (val === undefined || val === null || isNaN(val)) return "-";

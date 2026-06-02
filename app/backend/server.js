@@ -70,6 +70,7 @@ app.use(express.static(path.join(__dirname, "../mobile-frontend/dist")));
 // FALLBACK: Serve assets for BOTH frontends in case they request /assets directly
 app.use("/assets", express.static(path.join(__dirname, "../frontend/dist/assets")));
 app.use("/assets", express.static(path.join(__dirname, "../mobile-frontend/dist/assets")));
+app.use("/assets", (req, res) => res.status(404).send("Not found"));
 
 // Handle React Router logic for PC frontend
 // Ruta de migración de emergencia
