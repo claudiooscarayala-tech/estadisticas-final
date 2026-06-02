@@ -30,10 +30,9 @@ db.exec(`
 const existing = db.prepare("SELECT count(*) as c FROM collections").get().c;
 if (existing > 0) {
   console.log("Collections already exist. Aborting restore to avoid duplicates.");
-  process.exit(0);
-}
-
-// Prepared statements
+  module.exports = true;
+} else {
+  // Prepared statements
 const insertCompany = db.prepare("INSERT OR IGNORE INTO companies (name) VALUES (?)");
 const getCompany = db.prepare("SELECT id FROM companies WHERE name = ?");
 
@@ -90,3 +89,4 @@ db.transaction(() => {
 })();
 
 console.log(`Restore complete! Inserted ${collectionsCount} collections.`);
+}
