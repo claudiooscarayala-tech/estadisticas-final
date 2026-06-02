@@ -1,7 +1,0 @@
-[build]
-builder = "NIXPACKS"
-buildCommand = "bash railway-build.sh"
-
-[deploy]
-startCommand = "bash railway-start.sh"
-restartPolicyType = "ON_FAILURE"
