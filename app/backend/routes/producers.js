@@ -97,5 +97,24 @@ router.put("/:id", (req, res) => {
     }
   }
 });
+// Delete a producer
+router.delete("/:id", (req, res) => {
+  const id = req.params.id;
+  try {
+    // Check if producer has any collections
+    const checkCollections = db.prepare("SELECT COUNT(*) as count FROM collections WHERE producer_id = ?").get(id);
+    if (checkCollections.count > 0) {
+      return res.status(400).json({ error: "No se puede eliminar el productor porque tiene cobranzas activas (monto > 0)." });
+    }
+
+    const info = db.prepare("DELETE FROM producers WHERE id = ?").run(id);
+    if (info.changes === 0) {
+      return res.status(404).json({ error: "Productor no encontrado" });
+    }
+    res.json({ message: "Productor eliminado exitosamente" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "./api";
-import { Save, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Save, AlertCircle, CheckCircle2, FileText, Keyboard } from "lucide-react";
 import { NumericFormat } from "react-number-format";
+import FileUploadSection from "./FileUploadSection";
 
 const MONTHS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
@@ -9,6 +10,8 @@ const MONTHS = [
 ];
 
 export default function DataEntry() {
+  const [activeTab, setActiveTab] = useState("manual"); // 'manual' | 'file'
+  
   const [producers, setProducers] = useState([]);
   const [companies, setCompanies] = useState([]);
   
@@ -22,8 +25,7 @@ export default function DataEntry() {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    // Load producers and companies
+  const loadData = () => {
     Promise.all([
       api.get("/api/producers"),
       api.get("/api/companies")
@@ -31,10 +33,14 @@ export default function DataEntry() {
       setProducers(prodRes.data);
       setCompanies(compRes.data);
     });
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   useEffect(() => {
-    if (selectedMonth && selectedCompany) {
+    if (selectedMonth && selectedCompany && activeTab === "manual") {
       const year = new Date().getFullYear();
       api.get(`/api/collections?month=${selectedMonth}&year=${year}&company_id=${selectedCompany}`)
         .then(res => {
@@ -61,7 +67,7 @@ export default function DataEntry() {
         setPrevAmounts({});
       }
     }
-  }, [selectedMonth, selectedCompany]);
+  }, [selectedMonth, selectedCompany, activeTab]);
 
   const totalPrev = Object.values(prevAmounts).reduce((acc, val) => acc + (Number(val) || 0), 0);
   const totalCurrent = Object.values(amounts).reduce((acc, val) => acc + (Number(val) || 0), 0);
@@ -125,97 +131,140 @@ export default function DataEntry() {
     <div className="fade-in">
       <header className="page-header">
         <h1 className="page-title">Carga de Datos</h1>
-        <p className="page-subtitle">Ingreso manual de cobranzas por mes y compañía</p>
+        <p className="page-subtitle">Ingreso de cobranzas por mes y compañía</p>
       </header>
 
-      <div className="glass-card" style={{display: "flex", gap: "2rem", marginBottom: "2rem", maxWidth: "800px"}}>
-        <div className="form-group" style={{flex: 1, marginBottom: 0}}>
-          <label className="form-label">Compañía</label>
-          <select 
-            className="form-select"
-            value={selectedCompany}
-            onChange={(e) => setSelectedCompany(e.target.value)}
-          >
-            <option value="">Seleccione compañía</option>
-            {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-        <div className="form-group" style={{flex: 1, marginBottom: 0}}>
-          <label className="form-label">Mes</label>
-          <select 
-            className="form-select"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-          >
-            <option value="">Seleccione un mes</option>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
-        {status.message && (
-          <div className="fade-in" style={{display: "flex", alignItems: "center", gap: "0.5rem", color: status.type === "success" ? "var(--success)" : "var(--accent)", padding: "1rem"}}>
-            {status.type === "success" ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-            <span style={{fontWeight: "500"}}>{status.message}</span>
-          </div>
-        )}
+      {/* TABS */}
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+        <button 
+          onClick={() => setActiveTab("manual")}
+          style={{
+            display: "flex", alignItems: "center", gap: "0.5rem",
+            padding: "0.75rem 1.5rem", borderRadius: "12px", border: "none", cursor: "pointer",
+            fontWeight: "600", transition: "all 0.2s",
+            backgroundColor: activeTab === "manual" ? "var(--primary)" : "rgba(255,255,255,0.5)",
+            color: activeTab === "manual" ? "#fff" : "var(--text-muted)",
+            boxShadow: activeTab === "manual" ? "0 4px 12px rgba(79, 70, 229, 0.2)" : "none"
+          }}
+        >
+          <Keyboard size={18} /> Carga Manual
+        </button>
+        <button 
+          onClick={() => setActiveTab("file")}
+          style={{
+            display: "flex", alignItems: "center", gap: "0.5rem",
+            padding: "0.75rem 1.5rem", borderRadius: "12px", border: "none", cursor: "pointer",
+            fontWeight: "600", transition: "all 0.2s",
+            backgroundColor: activeTab === "file" ? "var(--primary)" : "rgba(255,255,255,0.5)",
+            color: activeTab === "file" ? "#fff" : "var(--text-muted)",
+            boxShadow: activeTab === "file" ? "0 4px 12px rgba(79, 70, 229, 0.2)" : "none"
+          }}
+        >
+          <FileText size={18} /> Subir Archivo PDF
+        </button>
       </div>
 
-      {selectedMonth && selectedCompany ? (
-        <div className="data-table-container fade-in" style={{ maxWidth: "800px" }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th style={{width: "50%"}}>Productor</th>
-                <th style={{width: "25%", textAlign: "right"}}>Mes Anterior ({companies.find(c => c.id === Number(selectedCompany))?.name})</th>
-                <th style={{width: "25%"}}>Monto de Cobranza ($)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {producers.map((p, index) => (
-                <tr key={p.id}>
-                  <td style={{fontWeight: "500", fontSize: "0.85rem"}}>{p.name}</td>
-                  <td style={{textAlign: "right", color: "var(--text-muted)", fontSize: "0.85rem"}}>
-                    {prevAmounts[p.id] !== undefined ? formatCurrency(prevAmounts[p.id]) : "-"}
-                  </td>
-                  <td>
-                    <NumericFormat 
-                      id={`input-${index}`}
-                      className="amount-input"
-                      placeholder="$ 0,00"
-                      value={amounts[p.id] !== undefined ? amounts[p.id] : ""}
-                      onValueChange={(values) => {
-                        handleAmountChange(p.id, values.floatValue === undefined ? "" : values.floatValue);
-                      }}
-                      onKeyDown={(e) => handleKeyDown(e, index)}
-                      thousandSeparator="."
-                      decimalSeparator=","
-                      prefix="$ "
-                      decimalScale={2}
-                      fixedDecimalScale={true}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr style={{ background: "rgba(15, 23, 42, 0.5)", fontWeight: "600", fontSize: "0.85rem" }}>
-                <td style={{ padding: "0.5rem 1rem" }}>TOTAL GENERAL</td>
-                <td style={{ textAlign: "right", color: "var(--text-muted)", padding: "0.5rem 1rem" }}>
-                  {formatCurrency(totalPrev)}
-                </td>
-                <td style={{ color: "var(--success)", padding: "0.5rem 1rem" }}>
-                  {formatCurrency(totalCurrent)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      ) : (
-        <div style={{textAlign: "center", padding: "4rem", color: "var(--text-muted)"}}>
-          Seleccione un mes y una compañía para comenzar a cargar datos.
-        </div>
+      {activeTab === "file" && (
+        <FileUploadSection 
+          producers={producers} 
+          companies={companies} 
+          onSuccess={() => {
+            // Recargar datos si es necesario
+            loadData();
+          }} 
+        />
       )}
 
+      {activeTab === "manual" && (
+        <>
+          <div className="glass-card" style={{display: "flex", gap: "2rem", marginBottom: "2rem", maxWidth: "800px"}}>
+            <div className="form-group" style={{flex: 1, marginBottom: 0}}>
+              <label className="form-label">Compañía</label>
+              <select 
+                className="form-select"
+                value={selectedCompany}
+                onChange={(e) => setSelectedCompany(e.target.value)}
+              >
+                <option value="">Seleccione compañía</option>
+                {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group" style={{flex: 1, marginBottom: 0}}>
+              <label className="form-label">Mes</label>
+              <select 
+                className="form-select"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              >
+                <option value="">Seleccione un mes</option>
+                {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            {status.message && (
+              <div className="fade-in" style={{display: "flex", alignItems: "center", gap: "0.5rem", color: status.type === "success" ? "var(--success)" : "var(--accent)", padding: "1rem"}}>
+                {status.type === "success" ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+                <span style={{fontWeight: "500"}}>{status.message}</span>
+              </div>
+            )}
+          </div>
 
+          {selectedMonth && selectedCompany ? (
+            <div className="data-table-container fade-in" style={{ maxWidth: "800px" }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th style={{width: "50%"}}>Productor</th>
+                    <th style={{width: "25%", textAlign: "right"}}>Mes Anterior ({companies.find(c => c.id === Number(selectedCompany))?.name})</th>
+                    <th style={{width: "25%"}}>Monto de Cobranza ($)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {producers.map((p, index) => (
+                    <tr key={p.id}>
+                      <td style={{fontWeight: "500", fontSize: "0.85rem"}}>{p.name}</td>
+                      <td style={{textAlign: "right", color: "var(--text-muted)", fontSize: "0.85rem"}}>
+                        {prevAmounts[p.id] !== undefined ? formatCurrency(prevAmounts[p.id]) : "-"}
+                      </td>
+                      <td>
+                        <NumericFormat 
+                          id={`input-${index}`}
+                          className="amount-input"
+                          placeholder="$ 0,00"
+                          value={amounts[p.id] !== undefined ? amounts[p.id] : ""}
+                          onValueChange={(values) => {
+                            handleAmountChange(p.id, values.floatValue === undefined ? "" : values.floatValue);
+                          }}
+                          onKeyDown={(e) => handleKeyDown(e, index)}
+                          thousandSeparator="."
+                          decimalSeparator=","
+                          prefix="$ "
+                          decimalScale={2}
+                          fixedDecimalScale={true}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "rgba(15, 23, 42, 0.5)", fontWeight: "600", fontSize: "0.85rem" }}>
+                    <td style={{ padding: "0.5rem 1rem" }}>TOTAL GENERAL</td>
+                    <td style={{ textAlign: "right", color: "var(--text-muted)", padding: "0.5rem 1rem" }}>
+                      {formatCurrency(totalPrev)}
+                    </td>
+                    <td style={{ color: "var(--success)", padding: "0.5rem 1rem" }}>
+                      {formatCurrency(totalCurrent)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          ) : (
+            <div style={{textAlign: "center", padding: "4rem", color: "var(--text-muted)"}}>
+              Seleccione un mes y una compañía para comenzar a cargar datos.
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
