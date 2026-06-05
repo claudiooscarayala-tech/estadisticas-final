@@ -33,11 +33,13 @@ export default function FileUploadSection({ producers, companies, onSuccess }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewData, setPreviewData] = useState(null); // { month, collections: [{producer, amount, producer_id}], total }
 
-  // Filtrar solo las 3 compañías principales
+  // Filtrar solo las compañías principales permitidas para carga automática
   const mainCompanies = companies.filter(c => 
     c.name.toLowerCase().includes("parana") || 
     c.name.toLowerCase().includes("sancor") || 
-    c.name.toLowerCase().includes("digna")
+    c.name.toLowerCase().includes("digna") ||
+    c.name.toLowerCase().includes("san cristobal") ||
+    c.name.toLowerCase().includes("mercantil andina")
   );
 
   const handleDragOver = (e) => {

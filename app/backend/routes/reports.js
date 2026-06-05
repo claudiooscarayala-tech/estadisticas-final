@@ -3,6 +3,15 @@ const router = express.Router();
 const db = require("../db");
 
 // Get general reports data
+router.get("/debug-db", (req, res) => {
+  res.json({
+    cwd: process.cwd(),
+    dirname: __dirname,
+    dbPath: process.env.DB_PATH || 'NOT SET',
+    sqliteFile: require('path').resolve(process.env.DB_PATH || 'database.sqlite')
+  });
+});
+
 router.get("/", (req, res) => {
   try {
     const year = req.query.year || new Date().getFullYear();
@@ -56,22 +65,39 @@ router.get("/", (req, res) => {
 router.get("/provinces", (req, res) => {
   try {
     const year = req.query.year || new Date().getFullYear();
-    const data = db.prepare(`
+    const rawData = db.prepare(`
       SELECT 
-        COALESCE(NULLIF(p.province, ''), 'Sin Provincia') as province,
-        COUNT(DISTINCT p.id) as producerCount,
-        SUM(c.amount) as totalCollection
+        p.id,
+        p.province,
+        SUM(c.amount) as amount
       FROM producers p
       LEFT JOIN collections c ON p.id = c.producer_id AND c.year = ?
-      GROUP BY COALESCE(NULLIF(p.province, ''), 'Sin Provincia')
-      ORDER BY totalCollection DESC
+      GROUP BY p.id, p.province
     `).all(year);
 
-    // Handle null sums if a province has no collections
-    const cleanedData = data.map(row => ({
-      ...row,
-      totalCollection: row.totalCollection || 0
-    }));
+    const grouped = {};
+    for (const row of rawData) {
+      let prov = (row.province || '').trim();
+      prov = prov.replace(/[\\r\\n\\t\\u200B]/g, '');
+      if (prov.toLowerCase() === 'salta') prov = 'Salta';
+      else if (prov.toLowerCase() === 'jujuy') prov = 'Jujuy';
+      if (!prov) prov = 'Sin Provincia';
+
+      if (!grouped[prov]) {
+        grouped[prov] = { province: prov, producerCount: 0, totalCollection: 0, ids: new Set() };
+      }
+      if (!grouped[prov].ids.has(row.id)) {
+        grouped[prov].producerCount += 1;
+        grouped[prov].ids.add(row.id);
+      }
+      grouped[prov].totalCollection += (row.amount || 0);
+    }
+
+    const cleanedData = Object.values(grouped).map(g => ({
+      province: g.province,
+      producerCount: g.producerCount,
+      totalCollection: g.totalCollection
+    })).sort((a, b) => b.totalCollection - a.totalCollection);
 
     res.json(cleanedData);
   } catch (error) {
