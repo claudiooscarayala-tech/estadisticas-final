@@ -68,7 +68,6 @@ export default function Dashboard() {
       setBirthdays(bdaysRes.data);
     } catch (err) {
       console.error(err);
-      import("react-hot-toast").then(toast => toast.default.error("Error cargando dashboard: " + (err.response?.data?.error || err.message)));
     } finally {
       setLoading(false);
     }
@@ -88,7 +87,7 @@ export default function Dashboard() {
     }
   };
 
-  if (loading || !data) return <div className="page-title fade-in">Cargando reporte...</div>;
+  if (loading) return <div className="page-title fade-in">Cargando reporte...</div>;
 
   const formatCurrency = (val) => {
     if (val === undefined || val === null || isNaN(val)) return "-";
@@ -97,9 +96,35 @@ export default function Dashboard() {
 
   return (
     <div className="fade-in">
-      <header className="page-header">
-        <h1 className="page-title">Dashboard General</h1>
-        <p className="page-subtitle">Resumen de cobranzas del año en curso</p>
+      <header style={{
+        background: "linear-gradient(90deg, var(--bg-card) 0%, rgba(42, 121, 198, 0.2) 100%)",
+        borderRadius: "1rem",
+        padding: "2rem",
+        marginBottom: "2rem",
+        border: "1px solid var(--border-color)",
+        display: "flex",
+        alignItems: "center",
+        gap: "1.5rem"
+      }}>
+        <div style={{
+          background: "#ffffff",
+          padding: "1rem",
+          borderRadius: "0.75rem",
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+        }}>
+          <img src="/logo-coa.png" alt="COA Logo" style={{ width: "60px", height: "auto", display: "block" }} />
+        </div>
+        <div>
+          <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: "0 0 0.25rem 0", color: "var(--text-main)" }}>
+            COA Asesores de Seguros
+          </h1>
+          <p style={{ color: "var(--accent)", fontSize: "1.1rem", fontWeight: "500", margin: "0 0 0.5rem 0" }}>
+            "El valor de compartir"
+          </p>
+          <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.95rem" }}>
+            Resumen de cobranzas y gestión de equipo
+          </p>
+        </div>
       </header>
 
       <div className="dashboard-grid">

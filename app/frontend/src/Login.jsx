@@ -30,11 +30,32 @@ export default function Login() {
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', width: '100%', background: 'var(--bg-main)' }}>
       <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-          <div style={{ background: 'var(--accent-light)', padding: '1rem', borderRadius: '50%', marginBottom: '1rem' }}>
-            <BarChart3 size={32} color="var(--accent)" />
+          <div style={{ 
+            background: '#ffffff', 
+            padding: '1.5rem', 
+            borderRadius: '1rem', 
+            marginBottom: '1.5rem',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }}>
+            <img src="/logo-coa.png" alt="COA Logo" style={{ width: '80px', height: 'auto', display: 'block' }} />
           </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>COA Analytics</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Inicia sesión para continuar</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: '700', textAlign: 'center', color: 'var(--text-main)' }}>
+            COA Asesores de Seguros
+          </h2>
+          <div style={{ 
+            marginTop: '0.75rem', 
+            padding: '0.5rem 1rem', 
+            background: 'var(--accent-light)', 
+            borderRadius: '2rem',
+            border: '1px solid var(--accent)'
+          }}>
+            <p style={{ color: 'var(--accent)', fontSize: '0.95rem', fontWeight: '600', textAlign: 'center', letterSpacing: '0.5px' }}>
+              "El valor de compartir"
+            </p>
+          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '1.5rem' }}>
+            Inicia sesión en tu portal corporativo
+          </p>
         </div>
 
         <form onSubmit={handleSubmit}>

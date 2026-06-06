@@ -30,9 +30,22 @@ function DashboardLayout({ children }) {
   return (
     <>
       <aside className="sidebar">
-        <div className="logo">
-          <BarChart3 className="logo-icon" size={28} />
-          <span>COA Analytics</span>
+        <div className="logo" style={{ marginBottom: "0.5rem" }}>
+          <div style={{ 
+            background: "#ffffff", 
+            padding: "0.5rem", 
+            borderRadius: "0.5rem", 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+          }}>
+            <img src="/logo-coa.png" alt="COA Logo" style={{ width: "32px", height: "auto" }} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
+            <span style={{ fontSize: "1.1rem", lineHeight: "1.1" }}>COA Asesores</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.5px" }}>de Seguros</span>
+          </div>
         </div>
         <nav className="nav-links">
           <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
