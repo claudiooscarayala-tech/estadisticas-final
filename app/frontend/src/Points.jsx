@@ -173,7 +173,6 @@ export default function Points() {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }
