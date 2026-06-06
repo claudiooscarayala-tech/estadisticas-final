@@ -15,6 +15,7 @@ import {
   Legend
 } from "recharts";
 import { TrendingUp, Award, Building } from "lucide-react";
+import logoCoa from "./assets/logo-coa.png";
 
 const COMPANY_COLORS = {
   "DIGNA": "#f97316",       // Naranja
@@ -112,7 +113,7 @@ export default function Dashboard() {
           borderRadius: "0.75rem",
           boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
         }}>
-          <img src="/logo-coa.png" alt="COA Logo" style={{ width: "60px", height: "auto", display: "block" }} />
+          <img src={logoCoa} alt="COA Logo" style={{ width: "60px", height: "auto", display: "block" }} />
         </div>
         <div>
           <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: "0 0 0.25rem 0", color: "var(--text-main)" }}>
@@ -148,10 +149,26 @@ export default function Dashboard() {
 
         {/* Cumpleaños de Hoy Widget */}
         <div className="glass-card delay-1" style={{ gridColumn: 'span 12', background: 'linear-gradient(to right, rgba(236, 72, 153, 0.05), transparent)' }}>
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
               <span style={{ fontSize: '1.5rem' }}>🎂</span> Cumpleaños de Hoy
             </h3>
+            <button 
+              onClick={handleTriggerBirthdays} 
+              disabled={isTriggering}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-main)',
+                padding: '0.4rem 0.8rem',
+                borderRadius: '0.5rem',
+                cursor: isTriggering ? 'not-allowed' : 'pointer',
+                fontSize: '0.85rem',
+                opacity: isTriggering ? 0.5 : 1
+              }}
+            >
+              {isTriggering ? 'Procesando...' : 'Reintentar envíos'}
+            </button>
           </div>
           
           {birthdays.length === 0 ? (
@@ -170,7 +187,7 @@ export default function Dashboard() {
                         Mensaje Enviado
                       </span>
                     ) : b.status === 'failed' ? (
-                      <span style={{ color: 'var(--danger)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <span title={b.message} style={{ color: 'var(--danger)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'help' }}>
                         <span style={{ width: 8, height: 8, background: 'var(--danger)', borderRadius: '50%', display: 'inline-block' }}></span>
                         Error al enviar
                       </span>

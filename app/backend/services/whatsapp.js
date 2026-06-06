@@ -50,14 +50,13 @@ async function sendWhatsappMessage(phone, text) {
 }
 
 function getLocalToday() {
-  // Get date in Argentina Timezone (UTC-3) manually to avoid ICU data issues on Linux
-  const now = new Date();
-  now.setUTCHours(now.getUTCHours() - 3);
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(now.getUTCDate()).padStart(2, '0');
-  const today = `${year}-${month}-${day}`;
-  return today;
+  const options = { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit' };
+  const formatter = new Intl.DateTimeFormat('es-AR', options);
+  const parts = formatter.formatToParts(new Date());
+  const year = parts.find(p => p.type === 'year').value;
+  const month = parts.find(p => p.type === 'month').value;
+  const day = parts.find(p => p.type === 'day').value;
+  return `${year}-${month}-${day}`;
 }
 
 // Function to process birthdays for a given date string (YYYY-MM-DD)
@@ -78,12 +77,16 @@ async function processBirthdays(dateString = getLocalToday()) {
 
     // Check if already sent today
     const existingLog = db.prepare(`
-      SELECT id FROM birthday_logs WHERE producer_id = ? AND date = ?
+      SELECT id, status FROM birthday_logs WHERE producer_id = ? AND date = ?
     `).get(producer.id, dateString);
 
-    if (existingLog) {
+    if (existingLog && existingLog.status === 'sent') {
       results.push({ producer, status: "already_sent" });
       continue;
+    }
+
+    if (existingLog && existingLog.status === 'failed') {
+      db.prepare("DELETE FROM birthday_logs WHERE id = ?").run(existingLog.id);
     }
 
     try {
@@ -110,12 +113,15 @@ async function processBirthdays(dateString = getLocalToday()) {
       
       results.push({ producer, status: "sent" });
     } catch (error) {
+      const detailedError = error.response?.data?.error?.message || error.response?.data?.message || error.response?.data || error.message;
+      const errorMsg = typeof detailedError === 'object' ? JSON.stringify(detailedError) : String(detailedError);
+      
       db.prepare(`
         INSERT INTO birthday_logs (producer_id, date, status, message) 
         VALUES (?, ?, 'failed', ?)
-      `).run(producer.id, dateString, error.message);
+      `).run(producer.id, dateString, errorMsg);
       
-      results.push({ producer, status: "failed", error: error.message });
+      results.push({ producer, status: "failed", error: errorMsg });
     }
   }
 
