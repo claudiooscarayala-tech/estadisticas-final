@@ -371,7 +371,16 @@ Detalles del Producto:
 
   if (loading) return <div className="fade-in">Cargando Tienda...</div>;
 
-  const categories = [...new Set(products.map(p => p.category))];
+  const desiredOrder = ["Accesorios y electronica", "Bienestar que elegis", "Productos del Hogar"];
+  const categories = [...new Set(products.map(p => p.category))].sort((a, b) => {
+    const indexA = desiredOrder.indexOf(a);
+    const indexB = desiredOrder.indexOf(b);
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return a.localeCompare(b);
+  });
+  
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
@@ -488,12 +497,11 @@ Detalles del Producto:
             <span style={{ color: "var(--accent)", fontSize: "0.9rem", cursor: "pointer" }}>Ver más {">"}</span>
           </div>
           
-          <div style={{ display: "flex", gap: "1.5rem", overflowX: "auto", paddingBottom: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1.5rem", paddingBottom: "1rem" }}>
             {products.filter(p => p.category === cat).map(product => {
               return (
                 <div key={product.id} className="glass-card" style={{ 
-                  minWidth: "234px", 
-                  width: "234px", 
+                  width: "100%", 
                   padding: "0", 
                   display: "flex", 
                   flexDirection: "column",
