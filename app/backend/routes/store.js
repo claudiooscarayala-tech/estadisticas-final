@@ -43,6 +43,7 @@ router.post("/products", upload.fields([
   { name: "image2", maxCount: 1 },
   { name: "image3", maxCount: 1 }
 ]), (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
     const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier } = req.body;
     
@@ -95,6 +96,7 @@ router.post("/products", upload.fields([
 
 // Delete product
 router.delete("/products/:id", (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
     const id = req.params.id;
     const product = db.prepare("SELECT image_url, image_url_2, image_url_3 FROM store_products WHERE id = ?").get(id);
@@ -110,10 +112,6 @@ router.delete("/products/:id", (req, res) => {
           }
         }
       }
-      
-      // Delete associated orders first to prevent Foreign Key constraint errors
-      db.prepare("DELETE FROM store_orders WHERE product_id = ?").run(id);
-      
       db.prepare("DELETE FROM store_products WHERE id = ?").run(id);
       res.json({ success: true });
     } else {
@@ -130,6 +128,7 @@ router.put("/products/:id", upload.fields([
   { name: "image2", maxCount: 1 },
   { name: "image3", maxCount: 1 }
 ]), (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
     const id = req.params.id;
     const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier } = req.body;
@@ -215,6 +214,10 @@ router.put("/products/:id", upload.fields([
 router.post("/orders", (req, res) => {
   const { producer_id, product_id, payment_type = "full_points" } = req.body;
   
+  if (req.user && req.user.role === 'producer' && String(req.user.id) !== String(producer_id)) {
+    return res.status(403).json({ error: "Acceso denegado" });
+  }
+
   if (!producer_id || !product_id) {
     return res.status(400).json({ error: "Missing producer or product ID" });
   }
@@ -280,6 +283,7 @@ router.post("/orders", (req, res) => {
 
 // Get all orders
 router.get("/orders", (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
     const orders = db.prepare(`
       SELECT 
@@ -307,6 +311,9 @@ router.get("/orders", (req, res) => {
 router.get("/producer-collections/:id", (req, res) => {
   try {
     const producerId = req.params.id;
+    if (req.user && req.user.role === 'producer' && String(req.user.id) !== String(producerId)) {
+      return res.status(403).json({ error: "Acceso denegado" });
+    }
     
     // Get all collections for this producer with company names
     const collections = db.prepare(`
@@ -347,6 +354,9 @@ router.get("/producer-collections/:id", (req, res) => {
 router.get("/producer-history/:id", (req, res) => {
   try {
     const producerId = req.params.id;
+    if (req.user && req.user.role === 'producer' && String(req.user.id) !== String(producerId)) {
+      return res.status(403).json({ error: "Acceso denegado" });
+    }
     
     // Get all points earned (incomes)
     const collections = db.prepare(`
@@ -408,28 +418,10 @@ router.get("/producer-history/:id", (req, res) => {
 
 // Mark order as delivered
 router.put("/orders/:id/deliver", (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
     const id = req.params.id;
     db.prepare("UPDATE store_orders SET status = 'delivered' WHERE id = ?").run(id);
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Cancel order and refund points/stock
-router.delete("/orders/:id", (req, res) => {
-  try {
-    const id = req.params.id;
-    db.transaction(() => {
-      const order = db.prepare("SELECT product_id FROM store_orders WHERE id = ?").get(id);
-      if (order) {
-        // Restore stock
-        db.prepare("UPDATE store_products SET stock = stock + 1 WHERE id = ?").run(order.product_id);
-        // Delete order (points are auto-refunded since they are calculated dynamically)
-        db.prepare("DELETE FROM store_orders WHERE id = ?").run(id);
-      }
-    })();
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -440,6 +432,10 @@ router.delete("/orders/:id", (req, res) => {
 router.post("/checkout", async (req, res) => {
   const { cart_items, product_id, producer_id, payment_type = "full_mp", source = "desktop" } = req.body;
   
+  if (req.user && req.user.role === 'producer' && String(req.user.id) !== String(producer_id)) {
+    return res.status(403).json({ error: "Acceso denegado" });
+  }
+
   if (!producer_id) {
     return res.status(400).json({ error: "Missing producer ID" });
   }

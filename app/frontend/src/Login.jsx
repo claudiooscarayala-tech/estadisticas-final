@@ -61,18 +61,18 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Usuario</label>
+            <label className="form-label">Usuario o Matrícula</label>
             <input 
               type="text" 
               className="form-input" 
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder="Ej: admin"
+              placeholder="Ej: admin o 91540"
               required
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Contraseña</label>
+            <label className="form-label">Contraseña o DNI</label>
             <input 
               type="password" 
               className="form-input" 

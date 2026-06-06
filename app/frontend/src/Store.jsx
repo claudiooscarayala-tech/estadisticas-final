@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { createPortal } from "react-dom";
 import api from "./api";
+import { AuthContext } from "./context/AuthContext";
 import { 
   ShoppingCart, 
   Star, 
@@ -18,6 +19,7 @@ import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
 
 export default function Store() {
+  const { user } = useContext(AuthContext);
   const [products, setProducts] = useState([]);
   const [producers, setProducers] = useState([]);
   const [selectedProducerId, setSelectedProducerId] = useState("");
@@ -92,6 +94,10 @@ export default function Store() {
         ]);
         setProducts(prodRes.data);
         setProducers(ptsRes.data.producers);
+        
+        if (user?.role === 'producer') {
+          setSelectedProducerId(String(user.id));
+        }
       } catch (err) {
         toast.error("Error al cargar la tienda");
       } finally {
@@ -473,11 +479,18 @@ Detalles del Producto:
           minWidth: "300px",
           boxShadow: "0 4px 6px -1px rgba(0,0,0,0.2)"
         }}>
-          <h3 style={{ marginBottom: "1rem", fontSize: "1rem", color: "var(--text-muted)" }}>Simulador de Usuario</h3>
-          <select className="form-select" style={{width: "100%", marginBottom: "1rem"}} value={selectedProducerId} onChange={e => setSelectedProducerId(e.target.value)}>
-            <option value="">Selecciona un Productor...</option>
-            {producers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+          {user?.role !== 'producer' && (
+            <>
+              <h3 style={{ marginBottom: "1rem", fontSize: "1rem", color: "var(--text-muted)" }}>Simulador de Usuario</h3>
+              <select className="form-select" style={{width: "100%", marginBottom: "1rem"}} value={selectedProducerId} onChange={e => setSelectedProducerId(e.target.value)}>
+                <option value="">Selecciona un Productor...</option>
+                {producers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </>
+          )}
+          {user?.role === 'producer' && (
+            <h3 style={{ marginBottom: "1rem", fontSize: "1rem", color: "var(--text-muted)" }}>Mi Saldo Actual</h3>
+          )}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ color: "var(--text-muted)" }}>Puntos Disponibles:</span>
             <span style={{ fontSize: "1.5rem", fontWeight: "700", color: "var(--accent)" }}>
@@ -674,33 +687,43 @@ Detalles del Producto:
                   borderRadius: "0.5rem", 
                   border: "1px solid #cbd5e1" 
                 }}>
-                  <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600", marginBottom: "0.5rem" }}>
-                    Simulador de Usuario (PAS)
-                  </div>
-                  <select 
-                    className="form-select" 
-                    style={{ 
-                      width: "100%", 
-                      padding: "0.5rem", 
-                      borderRadius: "0.375rem", 
-                      border: !selectedProducerId ? "1px solid #ef4444" : "1px solid #cbd5e1", 
-                      fontSize: "0.9rem",
-                      backgroundColor: "#ffffff",
-                      color: "#1e293b",
-                      marginBottom: "0.25rem"
-                    }} 
-                    value={selectedProducerId} 
-                    onChange={e => setSelectedProducerId(e.target.value)}
-                  >
-                    <option value="">Selecciona un Productor...</option>
-                    {producers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  {!selectedProducerId ? (
-                    <div style={{ fontSize: "0.75rem", color: "#ef4444", fontWeight: "500", marginTop: "0.25rem" }}>
-                      * Debes seleccionar un productor para poder agregar items al carrito.
-                    </div>
+                  {user?.role !== 'producer' ? (
+                    <>
+                      <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600", marginBottom: "0.5rem" }}>
+                        Simulador de Usuario (PAS)
+                      </div>
+                      <select 
+                        className="form-select" 
+                        style={{ 
+                          width: "100%", 
+                          padding: "0.5rem", 
+                          borderRadius: "0.375rem", 
+                          border: !selectedProducerId ? "1px solid #ef4444" : "1px solid #cbd5e1", 
+                          fontSize: "0.9rem",
+                          backgroundColor: "#ffffff",
+                          color: "#1e293b",
+                          marginBottom: "0.25rem"
+                        }} 
+                        value={selectedProducerId} 
+                        onChange={e => setSelectedProducerId(e.target.value)}
+                      >
+                        <option value="">Selecciona un Productor...</option>
+                        {producers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                      {!selectedProducerId && (
+                        <div style={{ fontSize: "0.75rem", color: "#ef4444", fontWeight: "500", marginTop: "0.25rem" }}>
+                          * Debes seleccionar un productor para poder agregar items al carrito.
+                        </div>
+                      )}
+                    </>
                   ) : (
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginTop: "0.5rem" }}>
+                    <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600", marginBottom: "0.5rem" }}>
+                      Mi Saldo de Puntos
+                    </div>
+                  )}
+
+                  {selectedProducerId && (
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginTop: user?.role === 'producer' ? "0" : "0.5rem" }}>
                       <span style={{ color: "#64748b" }}>Puntos Disponibles:</span>
                       <span style={{ fontWeight: "700", color: "#f97316" }}>
                         {producerPoints.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts

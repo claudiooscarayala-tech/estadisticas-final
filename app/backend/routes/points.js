@@ -6,7 +6,7 @@ router.get("/", (req, res) => {
   try {
     const year = req.query.year || new Date().getFullYear();
 
-    const rows = db.prepare(`
+    let query = `
       SELECT 
         p.id as producer_id,
         p.name as producer_name,
@@ -15,8 +15,17 @@ router.get("/", (req, res) => {
       FROM collections col
       JOIN producers p ON col.producer_id = p.id
       WHERE col.year = ?
-      GROUP BY p.id, col.month
-    `).all(year);
+    `;
+    const params = [year];
+
+    if (req.user && req.user.role === 'producer') {
+      query += ` AND p.id = ? `;
+      params.push(req.user.id);
+    }
+
+    query += ` GROUP BY p.id, col.month `;
+
+    const rows = db.prepare(query).all(...params);
 
     const producerMap = {};
     let globalTotalPoints = 0;

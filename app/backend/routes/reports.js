@@ -14,6 +14,9 @@ router.get("/debug-db", (req, res) => {
 
 router.get("/", (req, res) => {
   try {
+    if (req.user && req.user.role === 'producer') {
+      return res.status(403).json({ error: "Acceso denegado." });
+    }
     const year = req.query.year || new Date().getFullYear();
 
     const total = db.prepare("SELECT SUM(amount) as total FROM collections WHERE year = ?").get(year).total || 0;
@@ -151,6 +154,12 @@ router.get("/company/:id", (req, res) => {
 router.get("/producer/:id", (req, res) => {
   try {
     const producerId = req.params.id;
+    
+    // Security Check: If user is a producer, they can only view their own report
+    if (req.user && req.user.role === 'producer' && String(req.user.id) !== String(producerId)) {
+      return res.status(403).json({ error: "Acceso denegado. No puedes ver los datos de otro productor." });
+    }
+
     const year = req.query.year || new Date().getFullYear();
     const companyId = req.query.companyId;
 

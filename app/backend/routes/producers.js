@@ -41,6 +41,7 @@ router.post("/login", (req, res) => {
 
 // Create a new producer
 router.post("/", (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   const { name, email, phone, matricula, address, city, province, birthdate, dni } = req.body;
   if (!name) {
     return res.status(400).json({ error: "El nombre es obligatorio" });
@@ -67,6 +68,7 @@ router.post("/", (req, res) => {
 
 // Update an existing producer
 router.put("/:id", (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   const id = req.params.id;
   const { name, email, phone, matricula, address, city, province, birthdate, dni } = req.body;
   
@@ -99,6 +101,7 @@ router.put("/:id", (req, res) => {
 });
 // Delete a producer
 router.delete("/:id", (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   const id = req.params.id;
   try {
     // Check if producer has any collections

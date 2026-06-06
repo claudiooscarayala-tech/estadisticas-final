@@ -14,29 +14,43 @@ router.post("/login", (req, res) => {
   }
 
   try {
+    // 1. Intentar como administrador (users table)
     const user = db.prepare("SELECT * FROM users WHERE username = ?").get(username);
-
-    if (!user) {
-      return res.status(401).json({ error: "Credenciales inválidas" });
+    
+    if (user) {
+      const isMatch = bcrypt.compareSync(password, user.password);
+      if (isMatch) {
+        const token = jwt.sign(
+          { id: user.id, username: user.username, role: user.role },
+          JWT_SECRET,
+          { expiresIn: "12h" }
+        );
+        return res.json({
+          message: "Login exitoso",
+          token,
+          user: { id: user.id, username: user.username, role: user.role }
+        });
+      }
     }
 
-    const isMatch = bcrypt.compareSync(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ error: "Credenciales inválidas" });
+    // 2. Intentar como productor (producers table)
+    const producer = db.prepare("SELECT * FROM producers WHERE matricula = ?").get(username.trim());
+    
+    if (producer && producer.dni && producer.dni.trim() === password.trim()) {
+      const token = jwt.sign(
+        { id: producer.id, username: producer.name, role: 'producer' },
+        JWT_SECRET,
+        { expiresIn: "12h" }
+      );
+      return res.json({
+        message: "Login exitoso",
+        token,
+        user: { id: producer.id, username: producer.name, role: 'producer' }
+      });
     }
 
-    const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
-      JWT_SECRET,
-      { expiresIn: "12h" }
-    );
-
-    res.json({
-      message: "Login exitoso",
-      token,
-      user: { id: user.id, username: user.username, role: user.role }
-    });
+    // Si no coincide ni admin ni productor
+    return res.status(401).json({ error: "Credenciales inválidas" });
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor" });
   }
