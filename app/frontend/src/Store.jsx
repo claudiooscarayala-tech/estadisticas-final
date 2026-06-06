@@ -371,10 +371,10 @@ Detalles del Producto:
 
   if (loading) return <div className="fade-in">Cargando Tienda...</div>;
 
-  const desiredOrder = ["Accesorios y electronica", "Bienestar que elegis", "Productos del Hogar"];
+  const desiredOrder = ["accesorios y electronica", "bienestar que elegis", "productos del hogar"];
   const categories = [...new Set(products.map(p => p.category))].sort((a, b) => {
-    const indexA = desiredOrder.indexOf(a);
-    const indexB = desiredOrder.indexOf(b);
+    const indexA = desiredOrder.indexOf(a.toLowerCase().trim());
+    const indexB = desiredOrder.indexOf(b.toLowerCase().trim());
     if (indexA !== -1 && indexB !== -1) return indexA - indexB;
     if (indexA !== -1) return -1;
     if (indexB !== -1) return 1;
