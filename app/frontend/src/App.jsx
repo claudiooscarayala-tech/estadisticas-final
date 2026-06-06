@@ -31,21 +31,21 @@ function DashboardLayout({ children }) {
   return (
     <>
       <aside className="sidebar">
-        <div className="logo" style={{ marginBottom: "0.5rem" }}>
+        <div className="logo" style={{ marginBottom: "1rem", flexDirection: "column", gap: "0.5rem" }}>
           <div style={{ 
             background: "#ffffff", 
-            padding: "0.5rem", 
+            padding: "1rem", 
             borderRadius: "0.5rem", 
             display: "flex", 
             alignItems: "center", 
             justifyContent: "center",
+            width: "100%",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
           }}>
-            <img src={logoCoa} alt="COA Logo" style={{ width: "32px", height: "auto" }} />
+            <img src={logoCoa} alt="COA Logo" style={{ width: "100%", maxWidth: "150px", height: "auto" }} />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
-            <span style={{ fontSize: "1.1rem", lineHeight: "1.1" }}>COA Asesores</span>
-            <span style={{ fontSize: "0.7rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.5px" }}>de Seguros</span>
+          <div style={{ textAlign: "center", width: "100%" }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--accent)", fontStyle: "italic", fontWeight: "600" }}>"El valor de compartir"</span>
           </div>
         </div>
         <nav className="nav-links">

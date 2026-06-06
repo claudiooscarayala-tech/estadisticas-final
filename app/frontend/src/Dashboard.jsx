@@ -187,10 +187,15 @@ export default function Dashboard() {
                         Mensaje Enviado
                       </span>
                     ) : b.status === 'failed' ? (
-                      <span title={b.message} style={{ color: 'var(--danger)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'help' }}>
-                        <span style={{ width: 8, height: 8, background: 'var(--danger)', borderRadius: '50%', display: 'inline-block' }}></span>
-                        Error al enviar
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <span style={{ color: 'var(--danger)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <span style={{ width: 8, height: 8, background: 'var(--danger)', borderRadius: '50%', display: 'inline-block' }}></span>
+                          Error al enviar
+                        </span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', maxWidth: '200px', textAlign: 'right', marginTop: '0.2rem', wordBreak: 'break-word' }}>
+                          {b.message || "Error desconocido"}
+                        </span>
+                      </div>
                     ) : (
                       <span style={{ color: 'var(--accent)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <span style={{ width: 8, height: 8, background: 'var(--accent)', borderRadius: '50%', display: 'inline-block' }}></span>
