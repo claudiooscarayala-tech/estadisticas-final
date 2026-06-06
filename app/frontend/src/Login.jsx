@@ -3,6 +3,7 @@ import { AuthContext } from "./context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, Lock } from "lucide-react";
 import toast from "react-hot-toast";
+import logoCoa from "./assets/logo-coa.png";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -37,7 +38,7 @@ export default function Login() {
             marginBottom: '1.5rem',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
           }}>
-            <img src="/logo-coa.png" alt="COA Logo" style={{ width: '80px', height: 'auto', display: 'block' }} />
+            <img src={logoCoa} alt="COA Logo" style={{ width: '80px', height: 'auto', display: 'block' }} />
           </div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: '700', textAlign: 'center', color: 'var(--text-main)' }}>
             COA Asesores de Seguros

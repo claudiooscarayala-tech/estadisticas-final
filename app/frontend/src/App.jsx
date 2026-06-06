@@ -19,6 +19,7 @@ import Store from "./Store";
 import StoreAdmin from "./StoreAdmin";
 import StoreOrders from "./StoreOrders";
 import { Gift, ShoppingBag, Settings, Package, Users, Map, ChevronDown, ChevronRight } from "lucide-react";
+import logoCoa from "./assets/logo-coa.png";
 
 function DashboardLayout({ children }) {
   const { logout, user } = useContext(AuthContext);
@@ -40,7 +41,7 @@ function DashboardLayout({ children }) {
             justifyContent: "center",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
           }}>
-            <img src="/logo-coa.png" alt="COA Logo" style={{ width: "32px", height: "auto" }} />
+            <img src={logoCoa} alt="COA Logo" style={{ width: "32px", height: "auto" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
             <span style={{ fontSize: "1.1rem", lineHeight: "1.1" }}>COA Asesores</span>
