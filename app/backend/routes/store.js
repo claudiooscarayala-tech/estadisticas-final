@@ -370,10 +370,11 @@ router.get("/producer-history/:id", (req, res) => {
     
     const incomes = collections.map(c => {
       const monthNum = monthMap[c.month] || "01";
+      const lastDay = new Date(c.year, parseInt(monthNum, 10), 0).getDate();
       const compName = c.company_name ? c.company_name.toUpperCase() : 'COMPAÑÍA';
       return {
         id: `inc_${c.year}_${c.month}_${Math.random().toString(36).substr(2, 9)}`,
-        date: new Date(`${c.year}-${monthNum}-01T12:00:00Z`).toISOString(),
+        date: new Date(`${c.year}-${monthNum}-${lastDay.toString().padStart(2, '0')}T12:00:00Z`).toISOString(),
         type: 'income',
         description: `Puntos ${compName} (${c.month}/${c.year})`,
         points: Math.floor((c.amount || 0) * 0.0001)

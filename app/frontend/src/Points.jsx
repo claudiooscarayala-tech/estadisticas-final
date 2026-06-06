@@ -70,8 +70,16 @@ export default function Points() {
       {user?.role === 'producer' && data.producers.length > 0 && (
         <div className="dashboard-grid" style={{ marginBottom: "2rem" }}>
           <div className="glass-card stat-card delay-1">
-            <div className="stat-title"><Gift size={16} style={{display:"inline", marginRight: "8px"}} /> Mis Puntos Acumulados</div>
-            <div className="stat-value" style={{color: "var(--success)"}}>{data.producers[0].totalPoints.toLocaleString("es-AR")} pts</div>
+            <div className="stat-title"><Gift size={16} style={{display:"inline", marginRight: "8px"}} /> Puntos Disponibles</div>
+            <div className="stat-value" style={{color: "var(--success)"}}>
+              {history.length > 0 ? history[0].balance.toLocaleString("es-AR") : "0"} pts
+            </div>
+          </div>
+          <div className="glass-card stat-card delay-2">
+            <div className="stat-title"><Award size={16} style={{display:"inline", marginRight: "8px"}} /> Puntos Ganados (Histórico)</div>
+            <div className="stat-value" style={{color: "var(--accent)"}}>
+              {data.producers[0].totalPoints.toLocaleString("es-AR")} pts
+            </div>
           </div>
         </div>
       )}
