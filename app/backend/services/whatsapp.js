@@ -3,7 +3,7 @@ const cron = require("node-cron");
 const db = require("../db");
 
 const WHAPI_URL = "https://gate.whapi.cloud";
-const TOKEN = process.env.WHAPI_TOKEN || "Aff01P4HOcBvXFG6VVvTAMxGTxSMrB1n";
+const TOKEN = "Aff01P4HOcBvXFG6VVvTAMxGTxSMrB1n"; // Ignoring process.env to prevent conflicts
 
 // Helper to format phone number (Argentinian format handling)
 function formatPhoneForWhatsapp(phone) {
