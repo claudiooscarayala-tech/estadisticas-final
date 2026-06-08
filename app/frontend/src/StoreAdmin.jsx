@@ -12,6 +12,7 @@ export default function StoreAdmin() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Llevá el Mundial a tu living");
   const [cost, setCost] = useState("");
+  const [tarifa, setTarifa] = useState("1");
   const [stock, setStock] = useState("10");
   const [supplier, setSupplier] = useState("");
   const [image, setImage] = useState(null);
@@ -28,12 +29,11 @@ export default function StoreAdmin() {
     "Llevá el Mundial a tu living",
     "Computadoras, tablets y consolas",
     "Bienestar que elegís",
-    "Productos del hogar",
+    "Tu mochila ideal",
     "Accesorios y Electrónica",
     "Mista Seguros",
     "Paraná Seguros",
-    "BBVA Seguros",
-    "Sancor Seg"
+    "BBVA Seguros"
   ];
 
   const fetchProducts = async () => {
@@ -76,10 +76,14 @@ export default function StoreAdmin() {
     }
 
     const numericCost = parseFloat(cost) || 0;
-    const pricePesos = Math.ceil((numericCost * 2.2) / 100) * 100;
-    const pricePoints = Math.ceil((numericCost * 2.2) / 25);
-    const pricePesosMixed = Math.ceil((numericCost * 1.54) / 100) * 100;
-    const pricePointsMixed = Math.ceil((numericCost * 0.66) / 25);
+    let factor = 2.2;
+    if (tarifa === "2") factor = 2.6;
+    if (tarifa === "3") factor = 3.0;
+
+    const pricePesos = Math.ceil((numericCost * factor) / 100) * 100;
+    const pricePoints = Math.ceil((numericCost * factor) / 25);
+    const pricePesosMixed = Math.ceil((numericCost * (factor * 0.70)) / 100) * 100;
+    const pricePointsMixed = Math.ceil((numericCost * (factor * 0.30)) / 25);
 
     const formData = new FormData();
     formData.append("name", name);
@@ -90,6 +94,8 @@ export default function StoreAdmin() {
     formData.append("price_points_mixed", pricePointsMixed);
     formData.append("stock", stock);
     formData.append("supplier", supplier || "");
+    formData.append("base_cost", numericCost);
+    formData.append("tarifa", tarifa);
     if (image) formData.append("image", image);
     if (image2) formData.append("image2", image2);
     if (image3) formData.append("image3", image3);
@@ -119,6 +125,7 @@ export default function StoreAdmin() {
     setEditingId(null);
     setName("");
     setCost("");
+    setTarifa("1");
     setStock("10");
     setSupplier("");
     setImage(null);
@@ -148,9 +155,15 @@ export default function StoreAdmin() {
     if (fileInputRef2.current) fileInputRef2.current.value = "";
     if (fileInputRef3.current) fileInputRef3.current.value = "";
 
-    // Set cost based on scale: cost = price_pesos / 2.2
-    const inferredCost = (parseFloat(product.price_pesos) / 2.2).toFixed(2);
-    setCost(inferredCost);
+    // Set cost based on stored DB values, fallback to inference
+    if (product.base_cost !== undefined && product.base_cost !== null) {
+      setCost(product.base_cost);
+      setTarifa(product.tarifa ? product.tarifa.toString() : "1");
+    } else {
+      const inferredCost = (parseFloat(product.price_pesos) / 2.2).toFixed(2);
+      setCost(inferredCost);
+      setTarifa("1");
+    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -204,27 +217,40 @@ export default function StoreAdmin() {
               <label className="form-label" style={{fontWeight: "600", color: "var(--accent)"}}>Costo Base del Producto ($)</label>
               <input type="number" step="0.01" className="form-input" style={{width: "100%", borderColor: "var(--accent)"}} value={cost} onChange={e => setCost(e.target.value)} placeholder="Ej: 10000" required />
             </div>
-            {cost && !isNaN(parseFloat(cost)) && parseFloat(cost) > 0 && (
+            <div className="form-group">
+              <label className="form-label">Tarifa de Venta</label>
+              <select className="form-select" value={tarifa} onChange={e => setTarifa(e.target.value)} required>
+                <option value="1">Tarifa 1 (Markup 120%)</option>
+                <option value="2">Tarifa 2 (Markup 160%)</option>
+                <option value="3">Tarifa 3 (Markup 200%)</option>
+              </select>
+            </div>
+            {cost && !isNaN(parseFloat(cost)) && parseFloat(cost) > 0 && (() => {
+              let currentFactor = 2.2;
+              if (tarifa === "2") currentFactor = 2.6;
+              if (tarifa === "3") currentFactor = 3.0;
+              return (
               <div className="glass-card" style={{ padding: "1rem", marginBottom: "1.25rem", background: "rgba(255, 255, 255, 0.05)", border: "1px solid var(--border-color)", borderRadius: "0.5rem" }}>
                 <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.9rem", color: "var(--accent)", fontWeight: "600" }}>Precios de Venta Calculados (Auto):</h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "var(--text-muted)" }}>Solo Mercado Pago:</span>
-                    <strong style={{ color: "var(--text-main)" }}>$ {(Math.ceil((parseFloat(cost) * 2.2) / 100) * 100).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</strong>
+                    <strong style={{ color: "var(--text-main)" }}>$ {(Math.ceil((parseFloat(cost) * currentFactor) / 100) * 100).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</strong>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "var(--text-muted)" }}>Solo Puntos:</span>
-                    <strong style={{ color: "var(--text-main)" }}>{Math.ceil((parseFloat(cost) * 2.2) / 25).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts</strong>
+                    <strong style={{ color: "var(--text-main)" }}>{Math.ceil((parseFloat(cost) * currentFactor) / 25).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts</strong>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "var(--text-muted)" }}>Pago Mixto:</span>
                     <strong style={{ color: "var(--text-main)" }}>
-                      $ {(Math.ceil((parseFloat(cost) * 1.54) / 100) * 100).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} + {Math.ceil((parseFloat(cost) * 0.66) / 25).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts
+                      $ {(Math.ceil((parseFloat(cost) * currentFactor * 0.70) / 100) * 100).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} + {Math.ceil((parseFloat(cost) * currentFactor * 0.30) / 25).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} pts
                     </strong>
                   </div>
                 </div>
               </div>
-            )}
+              );
+            })()}
             <div className="form-group">
               <label className="form-label">Stock Disponible</label>
               <input type="number" className="form-input" value={stock} onChange={e => setStock(e.target.value)} required />

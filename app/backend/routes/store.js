@@ -45,7 +45,7 @@ router.post("/products", upload.fields([
 ]), (req, res) => {
   if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
-    const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier } = req.body;
+    const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier, base_cost, tarifa } = req.body;
     
     const file1 = req.files && req.files["image"] ? req.files["image"][0] : null;
     const file2 = req.files && req.files["image2"] ? req.files["image2"][0] : null;
@@ -69,15 +69,16 @@ router.post("/products", upload.fields([
     const imageUrl3 = file3 ? `/uploads/${file3.filename}` : null;
 
     const insert = db.prepare(`
-      INSERT INTO store_products (name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, image_url, image_url_2, image_url_3, stock, supplier)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO store_products (name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, image_url, image_url_2, image_url_3, stock, supplier, base_cost, tarifa)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     const info = insert.run(
       name, category, 
       parseFloat(price_pesos) || 0, parseInt(price_points) || 0, 
       parseFloat(price_pesos_mixed) || 0, parseInt(price_points_mixed) || 0,
-      imageUrl, imageUrl2, imageUrl3, parseInt(stock) || 10, supplier || null
+      imageUrl, imageUrl2, imageUrl3, parseInt(stock) || 10, supplier || null,
+      parseFloat(base_cost) || 0, parseInt(tarifa) || 1
     );
     
     res.json({ success: true, id: info.lastInsertRowid });
@@ -131,7 +132,7 @@ router.put("/products/:id", upload.fields([
   if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
     const id = req.params.id;
-    const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier } = req.body;
+    const { name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier, base_cost, tarifa } = req.body;
     
     const file1 = req.files && req.files["image"] ? req.files["image"][0] : null;
     const file2 = req.files && req.files["image2"] ? req.files["image2"][0] : null;
@@ -186,7 +187,7 @@ router.put("/products/:id", upload.fields([
 
     const update = db.prepare(`
       UPDATE store_products 
-      SET name = ?, category = ?, price_pesos = ?, price_points = ?, price_pesos_mixed = ?, price_points_mixed = ?, image_url = ?, image_url_2 = ?, image_url_3 = ?, stock = ?, supplier = ?
+      SET name = ?, category = ?, price_pesos = ?, price_points = ?, price_pesos_mixed = ?, price_points_mixed = ?, image_url = ?, image_url_2 = ?, image_url_3 = ?, stock = ?, supplier = ?, base_cost = ?, tarifa = ?
       WHERE id = ?
     `);
     
@@ -194,7 +195,8 @@ router.put("/products/:id", upload.fields([
       name, category, 
       parseFloat(price_pesos) || 0, parseInt(price_points) || 0,
       parseFloat(price_pesos_mixed) || 0, parseInt(price_points_mixed) || 0,
-      imageUrl, imageUrl2, imageUrl3, parseInt(stock) || 0, supplier || null, id
+      imageUrl, imageUrl2, imageUrl3, parseInt(stock) || 0, supplier || null,
+      parseFloat(base_cost) || 0, parseInt(tarifa) || 1, id
     );
     res.json({ success: true });
   } catch (error) {

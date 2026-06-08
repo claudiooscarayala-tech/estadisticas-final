@@ -31,7 +31,9 @@ const autoMigrate = [
   "ALTER TABLE store_products ADD COLUMN image_url_3 TEXT",
   "ALTER TABLE store_products ADD COLUMN supplier TEXT",
   "ALTER TABLE store_orders ADD COLUMN payment_type TEXT DEFAULT 'full_points'",
-  "ALTER TABLE store_orders ADD COLUMN pesos_spent REAL DEFAULT 0"
+  "ALTER TABLE store_orders ADD COLUMN pesos_spent REAL DEFAULT 0",
+  "ALTER TABLE store_products ADD COLUMN base_cost REAL DEFAULT 0",
+  "ALTER TABLE store_products ADD COLUMN tarifa INTEGER DEFAULT 1"
 ];
 
 for (const query of autoMigrate) {
@@ -40,6 +42,12 @@ for (const query of autoMigrate) {
   } catch (err) {
     // La columna ya existe, ignorar el error
   }
+}
+
+try {
+  db.exec("UPDATE store_products SET tarifa = 1, base_cost = ROUND(price_pesos / 2.2, 2) WHERE base_cost = 0 OR base_cost IS NULL");
+} catch (err) {
+  // Ignorar error de actualización
 }
 
 module.exports = db;
