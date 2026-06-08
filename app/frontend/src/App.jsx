@@ -227,6 +227,32 @@ function DashboardLayout({ children }) {
             Usuario: {user?.username}
           </div>
           <button 
+            onClick={() => {
+              const token = localStorage.getItem("token");
+              if (!token) return;
+              fetch("/api/download-db", {
+                headers: { "Authorization": `Bearer ${token}` }
+              })
+              .then(res => {
+                if (!res.ok) throw new Error("Error al descargar backup");
+                return res.blob();
+              })
+              .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `backup_estadisticas_${new Date().toISOString().split('T')[0]}.sqlite`;
+                a.click();
+              })
+              .catch(err => alert(err.message));
+            }}
+            className="nav-link" 
+            style={{ width: "100%", background: "transparent", border: "none", cursor: "pointer", textAlign: "left", padding: "0.75rem 1rem", color: "var(--accent)" }}
+          >
+            <Database size={20} />
+            Descargar Backup
+          </button>
+          <button 
             onClick={logout} 
             className="nav-link" 
             style={{ width: "100%", background: "transparent", border: "none", cursor: "pointer", textAlign: "left", padding: "0.75rem 1rem" }}

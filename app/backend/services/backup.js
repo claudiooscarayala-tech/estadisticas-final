@@ -3,65 +3,52 @@ const fs = require("fs");
 const path = require("path");
 
 function initBackupCron() {
-  // Ejecutar todos los días a las 22:00
-  cron.schedule("0 22 * * *", () => {
-    console.log("[CRON] Iniciando proceso de copia de seguridad automática...");
-    
+  // Ejecutar todos los días a las 03:00 AM
+  cron.schedule("0 3 * * *", () => {
+    console.log("[Backup] Iniciando copia de seguridad programada...");
     try {
       const dataPath = process.env.DATA_PATH || path.join(__dirname, "..");
-      const dbPath = process.env.DB_PATH || path.join(__dirname, "..", "database.sqlite");
-      const backupsDir = path.join(dataPath, "backups");
+      const dbPath = process.env.DB_PATH || path.join(dataPath, "database.sqlite");
+      const uploadsPath = path.join(dataPath, "uploads");
 
-      if (!fs.existsSync(dbPath)) {
-        console.error("[CRON] No se encontró database.sqlite para respaldar.");
-        return;
+      if (!fs.existsSync(uploadsPath)) {
+        fs.mkdirSync(uploadsPath, { recursive: true });
       }
 
-      // Crear directorio de backups si no existe
-      if (!fs.existsSync(backupsDir)) {
-        fs.mkdirSync(backupsDir, { recursive: true });
-      }
+      if (fs.existsSync(dbPath)) {
+        const date = new Date();
+        const dateString = date.toISOString().split("T")[0]; // YYYY-MM-DD
+        const backupFilename = `backup_db_${dateString}.sqlite`;
+        const backupPath = path.join(uploadsPath, backupFilename);
 
-      // Obtener fecha en UTC-3
-      const now = new Date();
-      now.setUTCHours(now.getUTCHours() - 3);
-      const year = now.getUTCFullYear();
-      const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(now.getUTCDate()).padStart(2, '0');
-      const hour = String(now.getUTCHours()).padStart(2, '0');
-      const minute = String(now.getUTCMinutes()).padStart(2, '0');
-      
-      const backupFileName = `database_backup_${year}-${month}-${day}_${hour}${minute}.sqlite`;
-      const backupFilePath = path.join(backupsDir, backupFileName);
+        // Hacer la copia
+        fs.copyFileSync(dbPath, backupPath);
+        console.log(`[Backup] Copia de seguridad guardada en: ${backupPath}`);
 
-      // Copiar la base de datos
-      fs.copyFileSync(dbPath, backupFilePath);
-      console.log(`[CRON] Copia de seguridad creada exitosamente: ${backupFileName}`);
+        // Eliminar backups antiguos manteniendo solo los 4 más recientes
+        const files = fs.readdirSync(uploadsPath);
+        const backupFiles = files
+          .filter(file => file.startsWith("backup_db_") && file.endsWith(".sqlite"))
+          .map(file => ({
+            name: file,
+            path: path.join(uploadsPath, file),
+            time: fs.statSync(path.join(uploadsPath, file)).mtime.getTime()
+          }))
+          .sort((a, b) => b.time - a.time); // Ordenar de más nuevo a más viejo
 
-      // Mantener solo los últimos 3 días (o los últimos 3 archivos si es diario)
-      const files = fs.readdirSync(backupsDir);
-      const backupFiles = files
-        .filter(f => f.startsWith("database_backup_") && f.endsWith(".sqlite"))
-        .map(f => {
-          const stats = fs.statSync(path.join(backupsDir, f));
-          return { name: f, time: stats.mtime.getTime() };
-        })
-        .sort((a, b) => b.time - a.time); // Ordenar de más reciente a más antiguo
-
-      if (backupFiles.length > 3) {
-        const filesToDelete = backupFiles.slice(3);
+        // Dejar los primeros 4 y eliminar el resto
+        const filesToDelete = backupFiles.slice(4);
         for (const fileObj of filesToDelete) {
-          const fileToDeletePath = path.join(backupsDir, fileObj.name);
-          fs.unlinkSync(fileToDeletePath);
-          console.log(`[CRON] Copia de seguridad antigua eliminada: ${fileObj.name}`);
+          fs.unlinkSync(fileObj.path);
+          console.log(`[Backup] Archivo antiguo eliminado: ${fileObj.name}`);
         }
+      } else {
+        console.warn("[Backup] No se encontró el archivo de la base de datos para respaldar.");
       }
     } catch (error) {
-      console.error("[CRON] Error al realizar la copia de seguridad:", error);
+      console.error("[Backup] Error durante la copia de seguridad:", error);
     }
   });
-
-  console.log("Servicio de backups automáticos (22:00) inicializado.");
 }
 
 module.exports = { initBackupCron };

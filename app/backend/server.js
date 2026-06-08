@@ -3,26 +3,19 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
-// Ejecutar migración de productores (one-time load)
-try {
-  const migrateProducers = require("./scripts/migrate_producers");
-  migrateProducers();
-} catch (err) {
-  console.error("Error running producer migration:", err);
-}
-
-// Ejecutar restauración de emergencia de cobranzas
-try {
-  require("./restore_collections");
-} catch (err) {
-  console.error("Error restoring collections:", err);
-}
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const authMiddleware = require("./middleware/auth");
+const rateLimit = require("express-rate-limit");
+
+// Configurar límite de intentos (10 peticiones cada 15 minutos)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Demasiados intentos de inicio de sesión. Por favor, intenta de nuevo en 15 minutos." }
+});
 
 const authRoutes = require("./routes/auth");
 const producersRoutes = require("./routes/producers");
@@ -35,9 +28,9 @@ const storeRoutes = require("./routes/store");
 const birthdaysRoutes = require("./routes/birthdays");
 const vencimientosRoutes = require("./routes/vencimientos");
 const { initCron } = require("./services/whatsapp");
-const { initBackupCron } = require("./services/backup");
 
 // --- Public Endpoints ---
+app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth", authRoutes);
 
 // --- Protected Endpoints ---
@@ -53,6 +46,7 @@ app.use("/api/vencimientos", authMiddleware, vencimientosRoutes);
 
 // Initialize Cron Jobs
 initCron();
+const { initBackupCron } = require("./services/backup");
 initBackupCron();
 
 const PORT = process.env.PORT || 3001;
@@ -79,48 +73,8 @@ app.use(express.static(path.join(__dirname, "../mobile-frontend/dist")));
 // FALLBACK: Serve assets for BOTH frontends in case they request /assets directly
 app.use("/assets", express.static(path.join(__dirname, "../frontend/dist/assets")));
 app.use("/assets", express.static(path.join(__dirname, "../mobile-frontend/dist/assets")));
-app.use("/assets", (req, res) => res.status(404).send("Not found"));
 
 // Handle React Router logic for PC frontend
-// Ruta de migración de emergencia
-app.get("/api/migrate-db", (req, res) => {
-  try {
-    const fs = require("fs");
-    const path = require("path");
-    let logs = [];
-    let backupPath = path.join(__dirname, '..', 'products-backup.json');
-    if (!fs.existsSync(backupPath)) {
-      backupPath = path.join(__dirname, '..', '..', 'products-backup.json');
-    }
-    
-    if (!fs.existsSync(backupPath)) {
-      return res.json({ success: false, error: "No backup file found at " + backupPath, logs });
-    }
-    logs.push("Encontrado backup en: " + backupPath);
-    
-    const products = JSON.parse(fs.readFileSync(backupPath, "utf-8"));
-    const insert = db.prepare(`
-      INSERT OR IGNORE INTO store_products 
-      (id, name, category, price_pesos, price_points, price_pesos_mixed, price_points_mixed, stock, supplier, image_url, image_url_2, image_url_3) 
-      VALUES (@id, @name, @category, @price_pesos, @price_points, @price_pesos_mixed, @price_points_mixed, @stock, @supplier, @image_url, @image_url_2, @image_url_3)
-    `);
-    
-    let count = 0;
-    for (const p of products) {
-      try {
-        insert.run(p);
-        count++;
-      } catch (err) {
-        logs.push("Error inserting " + p.name + ": " + err.message);
-      }
-    }
-    logs.push("Migrados " + count + " productos.");
-    res.json({ success: true, count, logs });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message, stack: err.stack });
-  }
-});
-
 app.get("/admin/*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
 });
@@ -132,7 +86,8 @@ app.get("*", (req, res, next) => {
 });
 
 // DEBUG ENDPOINT
-app.get("/api/debug-uploads", (req, res) => {
+app.get("/api/debug-uploads", authMiddleware, (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
     const fs = require('fs');
     const dataP = process.env.DATA_PATH || 'NOT SET';
@@ -157,7 +112,8 @@ app.get("/api/debug-uploads", (req, res) => {
 });
 
 // DUMP DB ENDPOINT (To easily backup production database to local machine)
-app.get("/api/download-db", (req, res) => {
+app.get("/api/download-db", authMiddleware, (req, res) => {
+  if (req.user && req.user.role === 'producer') return res.status(403).json({ error: "Acceso denegado" });
   try {
     const dbPath = process.env.DB_PATH || path.join(__dirname, "database.sqlite");
     if (require("fs").existsSync(dbPath)) {
