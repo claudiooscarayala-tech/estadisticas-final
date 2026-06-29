@@ -10,6 +10,35 @@ const jobs = {};
 
 const upload = multer({ dest: 'uploads/' });
 
+router.get("/test-connection", async (req, res) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: 'claudiooscarayala@gmail.com',
+        pass: process.env.GMAIL_APP_PASSWORD 
+      },
+      tls: { rejectUnauthorized: false },
+      connectionTimeout: 10000
+    });
+    
+    await transporter.verify();
+    res.json({ 
+      success: true, 
+      message: "Conexión a Gmail exitosa!", 
+      passLength: process.env.GMAIL_APP_PASSWORD ? process.env.GMAIL_APP_PASSWORD.length : 0 
+    });
+  } catch (err) {
+    res.json({ 
+      success: false, 
+      error: err.message,
+      passExists: !!process.env.GMAIL_APP_PASSWORD
+    });
+  }
+});
+
 router.post("/upload", upload.single("file"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
   
