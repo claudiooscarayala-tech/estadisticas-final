@@ -193,7 +193,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         from: 'claudiooscarayala@gmail.com',
         to: email,
         cc: 'ramosauxiliaradm@gmail.com',
-        subject: `Vencimientos del mes ${company}`,
+        subject: `Vencimientos del mes ${company} - ${producerName}`,
         text: `Estimado ${producerName}:\n\nLe estamos enviando en un archivo adjunto el listado de vencimientos del mes que indica el excel para su control y correspondientes renovaciones de pólizas de la compañía ${company}.\n\nSaludos cordiales.`,
         attachments: [
           {
