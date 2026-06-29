@@ -43,7 +43,7 @@ app.get("/api/test-email", async (req, res) => {
       secure: true,
       auth: {
         user: 'claudiooscarayala@gmail.com',
-        pass: process.env.GMAIL_APP_PASSWORD 
+        pass: 'reuxohirsyesrato'
       },
       tls: { rejectUnauthorized: false },
       connectionTimeout: 10000

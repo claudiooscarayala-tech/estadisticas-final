@@ -19,7 +19,7 @@ router.get("/test-connection", async (req, res) => {
       secure: true,
       auth: {
         user: 'claudiooscarayala@gmail.com',
-        pass: process.env.GMAIL_APP_PASSWORD 
+        pass: 'reuxohirsyesrato' 
       },
       tls: { rejectUnauthorized: false },
       connectionTimeout: 10000
@@ -133,7 +133,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       secure: true,
       auth: {
         user: 'claudiooscarayala@gmail.com',
-        pass: process.env.GMAIL_APP_PASSWORD 
+        pass: 'reuxohirsyesrato' 
       },
       tls: {
         rejectUnauthorized: false
