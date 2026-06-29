@@ -14,6 +14,8 @@ function Vencimiento({ companyName }) {
     setError("");
   };
 
+  const [jobProgress, setJobProgress] = useState(null);
+
   const handleUpload = async () => {
     if (!file) {
       setError("Por favor, selecciona un archivo Excel.");
@@ -27,6 +29,7 @@ function Vencimiento({ companyName }) {
     setLoading(true);
     setMessage("");
     setError("");
+    setJobProgress(null);
 
     try {
       const response = await api.post("/api/vencimientos/upload", formData, {
@@ -34,11 +37,36 @@ function Vencimiento({ companyName }) {
           "Content-Type": "multipart/form-data",
         },
       });
-      setMessage(`Proceso completado: Se enviaron ${response.data.emailsSent} correos.`);
+      
+      const jobId = response.data.jobId;
+      setJobProgress({ sent: 0, total: response.data.total });
+
+      // Iniciar Polling cada 3 segundos
+      const interval = setInterval(async () => {
+        try {
+          const statusRes = await api.get(`/api/vencimientos/status/${jobId}`);
+          const job = statusRes.data;
+          
+          setJobProgress({ sent: job.sent, total: job.total });
+
+          if (job.status === "completed") {
+            clearInterval(interval);
+            setLoading(false);
+            setJobProgress(null);
+            setMessage(`Proceso completado: Se enviaron ${job.total} correos exitosamente.`);
+          }
+        } catch (e) {
+          console.error("Error al consultar estado:", e);
+          clearInterval(interval);
+          setLoading(false);
+          setJobProgress(null);
+          setError("Error de conexión al consultar el estado. Los correos se siguen enviando.");
+        }
+      }, 3000);
+
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || "Ocurrió un error al procesar el archivo.");
-    } finally {
       setLoading(false);
     }
   };
@@ -94,7 +122,10 @@ function Vencimiento({ companyName }) {
           style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}
         >
           {loading ? <Loader className="spin" size={20} /> : <UploadCloud size={20} />}
-          {loading ? "Procesando y Enviando..." : "Procesar y Enviar Correos"}
+          {loading 
+            ? (jobProgress ? `Enviando ${jobProgress.sent} de ${jobProgress.total} correos...` : "Procesando Archivo...")
+            : "Procesar y Enviar Correos"
+          }
         </button>
 
         {message && (

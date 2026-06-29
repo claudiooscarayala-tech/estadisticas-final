@@ -6,6 +6,8 @@ const xlsx = require("xlsx-js-style");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 
+const jobs = {};
+
 const upload = multer({ dest: 'uploads/' });
 
 router.post("/upload", upload.single("file"), async (req, res) => {
@@ -111,6 +113,8 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     // Cargar todos los productores una sola vez para búsqueda inteligente
     const allProducers = db.prepare("SELECT name, email FROM producers").all();
 
+    const emailTasks = [];
+    
     for (const [producerName, rows] of Object.entries(groupedData)) {
       // Extraer solo la parte del nombre, eliminando números, guiones y comas
       const pureName = producerName.replace(/[0-9-]/g, '').replace(/,/g, '').trim();
@@ -194,22 +198,56 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         ]
       };
 
-      try {
-         await transporter.sendMail(mailOptions);
-         emailsSent++;
-      } catch (err) {
-         console.error("Error sending to", email, err);
-      }
+      emailTasks.push({ email, producerName, mailOptions });
     }
     
-    fs.unlinkSync(req.file.path);
-    res.json({ success: true, emailsSent });
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    const jobId = Date.now().toString();
+    jobs[jobId] = {
+      id: jobId,
+      total: emailTasks.length,
+      sent: 0,
+      status: 'processing'
+    };
+
+    res.json({ success: true, jobId, total: emailTasks.length });
+
+    // Enviar correos en segundo plano (Background process)
+    (async () => {
+      for (const task of emailTasks) {
+        try {
+          await transporter.sendMail(task.mailOptions);
+          jobs[jobId].sent++;
+        } catch (err) {
+          console.error("Error sending to", task.email, err);
+          jobs[jobId].sent++; // Contamos igual para que el progreso avance
+        }
+      }
+      jobs[jobId].status = 'completed';
+      
+      // Limpiar memoria después de 1 hora
+      setTimeout(() => {
+         delete jobs[jobId];
+      }, 3600000);
+    })();
+
   } catch (err) {
     if (fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
     res.status(500).json({ error: err.message });
   }
+});
+
+router.get("/status/:jobId", (req, res) => {
+  const job = jobs[req.params.jobId];
+  if (!job) {
+    return res.status(404).json({ error: "Job not found" });
+  }
+  res.json(job);
 });
 
 module.exports = router;
