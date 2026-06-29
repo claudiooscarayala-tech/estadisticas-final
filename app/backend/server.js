@@ -33,6 +33,27 @@ const { initCron } = require("./services/whatsapp");
 app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth", authRoutes);
 
+app.get("/api/test-email", async (req, res) => {
+  try {
+    const nodemailer = require("nodemailer");
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: 'claudiooscarayala@gmail.com',
+        pass: process.env.GMAIL_APP_PASSWORD 
+      },
+      tls: { rejectUnauthorized: false },
+      connectionTimeout: 10000
+    });
+    await transporter.verify();
+    res.json({ success: true, message: "Conexion EXITOSA" });
+  } catch (err) {
+    res.json({ success: false, error: err.message, hasPass: !!process.env.GMAIL_APP_PASSWORD });
+  }
+});
+
 // --- Protected Endpoints ---
 app.use("/api/producers", authMiddleware, producersRoutes);
 app.use("/api/companies", authMiddleware, companiesRoutes);
