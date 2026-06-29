@@ -15,14 +15,14 @@ router.get("/test-connection", async (req, res) => {
   try {
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: 'claudiooscarayala@gmail.com',
         pass: 'reuxohirsyesrato' 
       },
       tls: { rejectUnauthorized: false },
-      connectionTimeout: 10000
+      connectionTimeout: 20000
     });
     
     await transporter.verify();
@@ -129,8 +129,8 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: 'claudiooscarayala@gmail.com',
         pass: 'reuxohirsyesrato' 
@@ -138,9 +138,9 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       tls: {
         rejectUnauthorized: false
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000
+      connectionTimeout: 20000,
+      greetingTimeout: 20000,
+      socketTimeout: 20000
     });
 
     let emailsSent = 0;

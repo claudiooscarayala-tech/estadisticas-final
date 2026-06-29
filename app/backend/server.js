@@ -39,14 +39,14 @@ app.get("/api/test-email", async (req, res) => {
     const nodemailer = require("nodemailer");
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: 'claudiooscarayala@gmail.com',
         pass: 'reuxohirsyesrato'
       },
       tls: { rejectUnauthorized: false },
-      connectionTimeout: 10000
+      connectionTimeout: 20000
     });
     await transporter.verify();
     res.json({ success: true, message: "Conexion EXITOSA" });
