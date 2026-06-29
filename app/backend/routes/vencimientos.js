@@ -98,14 +98,19 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     }
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: 'claudiooscarayala@gmail.com',
         pass: process.env.GMAIL_APP_PASSWORD 
       },
       tls: {
         rejectUnauthorized: false
-      }
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000
     });
 
     let emailsSent = 0;
