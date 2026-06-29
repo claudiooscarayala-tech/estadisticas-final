@@ -1,4 +1,5 @@
 const express = require("express");
+require('dns').setDefaultResultOrder('ipv4first');
 const router = express.Router();
 const db = require("../db");
 const multer = require("multer");
