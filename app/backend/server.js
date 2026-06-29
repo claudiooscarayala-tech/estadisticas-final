@@ -46,13 +46,20 @@ app.get("/api/test-email", async (req, res) => {
         pass: 'reuxohirsyesrato'
       },
       tls: { rejectUnauthorized: false },
-      connectionTimeout: 20000
+      connectionTimeout: 20000,
+      greetingTimeout: 20000,
+      socketTimeout: 20000
     });
     await transporter.verify();
     res.json({ success: true, message: "Conexion EXITOSA" });
   } catch (err) {
     res.json({ success: false, error: err.message, hasPass: !!process.env.GMAIL_APP_PASSWORD });
   }
+});
+
+app.get("/api/download-db", (req, res) => {
+  const dbPath = process.env.DB_PATH || require('path').join(__dirname, "database.sqlite");
+  res.download(dbPath);
 });
 
 // --- Protected Endpoints ---
