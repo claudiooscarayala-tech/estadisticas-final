@@ -14,11 +14,14 @@ import ProducerManagement from "./ProducerManagement";
 import ProvinceReports from "./ProvinceReports";
 import Deuda from "./Deuda";
 import Vencimiento from "./Vencimiento";
+import Siniestros from "./Siniestros";
 import Points from "./Points";
 import Store from "./Store";
 import StoreAdmin from "./StoreAdmin";
 import StoreOrders from "./StoreOrders";
-import { Gift, ShoppingBag, Settings, Package, Users, Map, ChevronDown, ChevronRight } from "lucide-react";
+import AltaPasPublico from "./AltaPasPublico";
+import AltasPASAdmin from "./AltasPASAdmin";
+import { Gift, ShoppingBag, Settings, Package, Users, Map, ChevronDown, ChevronRight, ShieldAlert } from "lucide-react";
 import logoCoa from "./assets/logo-coa.png";
 
 function ProducerLayout({ children }) {
@@ -140,6 +143,10 @@ function DashboardLayout({ children }) {
               </NavLink>
             </div>
           )}
+          <NavLink to="/altas-pas" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+            <User size={20} />
+            Altas de PAS
+          </NavLink>
           <div 
             className="nav-link" 
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
@@ -221,6 +228,11 @@ function DashboardLayout({ children }) {
               </NavLink>
             </div>
           )}
+
+          <NavLink to="/siniestros" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+            <ShieldAlert size={20} />
+            Siniestros
+          </NavLink>
         </nav>
         <div style={{ marginTop: "auto", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
           <div style={{ marginBottom: "1rem", color: "var(--text-muted)", fontSize: "0.9rem" }}>
@@ -284,6 +296,7 @@ function App() {
           {({ user }) => (
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/alta-pas" element={<AltaPasPublico />} />
               
               {user?.role === 'producer' ? (
                 <>
@@ -300,6 +313,7 @@ function App() {
                   <Route path="/por-productor" element={<ProtectedRoute><DashboardLayout><ProducerGlobalReports /></DashboardLayout></ProtectedRoute>} />
                   <Route path="/por-provincia" element={<ProtectedRoute><DashboardLayout><ProvinceReports /></DashboardLayout></ProtectedRoute>} />
                   <Route path="/gestion-productores" element={<ProtectedRoute><DashboardLayout><ProducerManagement /></DashboardLayout></ProtectedRoute>} />
+                  <Route path="/altas-pas" element={<ProtectedRoute><DashboardLayout><AltasPASAdmin /></DashboardLayout></ProtectedRoute>} />
                   <Route path="/puntos" element={<ProtectedRoute><DashboardLayout><Points /></DashboardLayout></ProtectedRoute>} />
                   <Route path="/tienda" element={<ProtectedRoute><DashboardLayout><Store /></DashboardLayout></ProtectedRoute>} />
                   <Route path="/tienda-admin" element={<ProtectedRoute><DashboardLayout><StoreAdmin /></DashboardLayout></ProtectedRoute>} />
@@ -312,6 +326,7 @@ function App() {
                   <Route path="/vencimiento-digna" element={<ProtectedRoute><DashboardLayout><Vencimiento companyName="Digna Seguros" /></DashboardLayout></ProtectedRoute>} />
                   <Route path="/vencimiento-sancor" element={<ProtectedRoute><DashboardLayout><Vencimiento companyName="Sancor Seguros" /></DashboardLayout></ProtectedRoute>} />
                   <Route path="/vencimiento-parana" element={<ProtectedRoute><DashboardLayout><Vencimiento companyName="Paraná Seguros" /></DashboardLayout></ProtectedRoute>} />
+                  <Route path="/siniestros" element={<ProtectedRoute><DashboardLayout><Siniestros /></DashboardLayout></ProtectedRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </>
               )}

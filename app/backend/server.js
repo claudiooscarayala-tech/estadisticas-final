@@ -28,11 +28,14 @@ const pointsRoutes = require("./routes/points");
 const storeRoutes = require("./routes/store");
 const birthdaysRoutes = require("./routes/birthdays");
 const vencimientosRoutes = require("./routes/vencimientos");
+const siniestrosRoutes = require("./routes/siniestros");
+const altasPasRoutes = require("./routes/altas_pas");
 const { initCron } = require("./services/whatsapp");
 
 // --- Public Endpoints ---
 app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth", authRoutes);
+app.use("/api", altasPasRoutes); // /api/public/altas-pas will be accessible here without auth, wait, authMiddleware is applied PER ROUTER below.
 
 app.get("/api/test-email", async (req, res) => {
   try {
@@ -72,6 +75,7 @@ app.use("/api/points", authMiddleware, pointsRoutes);
 app.use("/api/store", authMiddleware, storeRoutes);
 app.use("/api/birthdays", authMiddleware, birthdaysRoutes);
 app.use("/api/vencimientos", authMiddleware, vencimientosRoutes);
+app.use("/api/siniestros", authMiddleware, siniestrosRoutes);
 
 // Initialize Cron Jobs
 initCron();
