@@ -13,7 +13,8 @@ export default function AltaPasPublico() {
     matricula: "",
     companias: "",
     cbu: "",
-    banco_cobro: ""
+    banco_cobro: "",
+    recomendado_por: ""
   });
   
   const [files, setFiles] = useState({
@@ -259,6 +260,11 @@ export default function AltaPasPublico() {
                 <input type="file" name="constancia_uif" accept=".pdf" onChange={handleFileChange} className="form-input" style={{ width: '100%', backgroundColor: 'transparent', padding: 0 }} />
               </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "var(--text-main)" }}>¿Te recomendó algún colega? ¿Quién?</label>
+            <input type="text" name="recomendado_por" value={formData.recomendado_por} onChange={handleInputChange} className="form-input" style={{ width: '100%', fontSize: '1.1rem' }} placeholder="Opcional" />
           </div>
 
           {status.message && (

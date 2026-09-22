@@ -38,7 +38,7 @@ router.post("/public/altas-pas", upload.fields([
 ]), (req, res) => {
   try {
     const { 
-      compania_alta, apellido, nombre, dni, cuit, condicion_fiscal, matricula, companias, cbu, banco_cobro
+      compania_alta, apellido, nombre, dni, cuit, condicion_fiscal, matricula, companias, cbu, banco_cobro, recomendado_por
     } = req.body;
 
     const getFilePath = (fieldname) => req.files && req.files[fieldname] ? req.files[fieldname][0].path.replace(/\\/g, '/') : null;
@@ -61,13 +61,13 @@ router.post("/public/altas-pas", upload.fields([
     const stmt = db.prepare(`
       INSERT INTO altas_pas (
         compania_alta, apellido, nombre, dni, cuit, condicion_fiscal, matricula, companias, cbu, banco_cobro,
-        constancia_afip, constancia_iibb, pago_matricula, dni_frente, dni_dorso, cipas_frente, cipas_dorso, pago_libros, constancia_uif, constancia_cbu
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        constancia_afip, constancia_iibb, pago_matricula, dni_frente, dni_dorso, cipas_frente, cipas_dorso, pago_libros, constancia_uif, constancia_cbu, recomendado_por
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
       compania_alta, apellido, nombre, dni, cuit, condicion_fiscal, matricula, companias, cbu, banco_cobro,
-      constancia_afip, constancia_iibb, pago_matricula, dni_frente, dni_dorso, cipas_frente, cipas_dorso, pago_libros, constancia_uif, constancia_cbu
+      constancia_afip, constancia_iibb, pago_matricula, dni_frente, dni_dorso, cipas_frente, cipas_dorso, pago_libros, constancia_uif, constancia_cbu, recomendado_por
     );
 
     res.status(201).json({ id: result.lastInsertRowid, message: "Inscripción guardada correctamente" });

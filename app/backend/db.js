@@ -68,6 +68,7 @@ db.exec(`
     pago_libros TEXT,
     constancia_uif TEXT,
     constancia_cbu TEXT,
+    recomendado_por TEXT,
     fecha TEXT DEFAULT CURRENT_TIMESTAMP
   )
 `);
@@ -99,7 +100,8 @@ const autoMigrate = [
   "ALTER TABLE altas_pas ADD COLUMN cipas_dorso TEXT",
   "ALTER TABLE altas_pas ADD COLUMN pago_libros TEXT",
   "ALTER TABLE altas_pas ADD COLUMN constancia_uif TEXT",
-  "ALTER TABLE altas_pas ADD COLUMN constancia_cbu TEXT"
+  "ALTER TABLE altas_pas ADD COLUMN constancia_cbu TEXT",
+  "ALTER TABLE altas_pas ADD COLUMN recomendado_por TEXT"
 ];
 
 for (const query of autoMigrate) {

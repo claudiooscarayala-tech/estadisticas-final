@@ -57,7 +57,12 @@ export default function AltasPASAdmin() {
                     </td>
                     <td style={{ padding: "1rem" }}>
                       <div style={{ fontWeight: "600", color: "var(--primary)" }}>{a.apellido}, {a.nombre}</div>
-                      <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>{a.condicion_fiscal}</div>
+                      <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>{a.condicion_fiscal}</div>
+                      {a.recomendado_por && (
+                        <div style={{ fontSize: "0.8rem", color: "var(--accent)", background: "rgba(236, 72, 153, 0.1)", padding: "0.15rem 0.4rem", borderRadius: "0.25rem", display: "inline-block" }}>
+                          Recomendado por: {a.recomendado_por}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: "500" }}>
                       {a.compania_alta || "-"}
