@@ -48,6 +48,7 @@ export default function Siniestros() {
     setEditingId(siniestro.id);
     setFormData({
       fecha: siniestro.fecha || "",
+      fecha_siniestro: siniestro.fecha_siniestro || "",
       compania: siniestro.compania || "",
       stros: siniestro.stros || "",
       poliza: siniestro.poliza || "",
