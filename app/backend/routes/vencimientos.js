@@ -71,13 +71,16 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     let producerColIdx = -1;
     let emailColIdx = -1;
 
+    const allProducers = db.prepare("SELECT name, email FROM producers").all();
+    const normalizeName = str => String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[0-9-]/g, '').replace(/,/g, '').trim();
+
     console.log(`Buscando cabeceras en ${data.length} filas...`);
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < Math.min(data.length, 20); i++) {
       const row = data[i];
       for (let j = 0; j < row.length; j++) {
-        const cellVal = String(row[j]).trim().toUpperCase();
-        if (cellVal.includes('PRODUCTOR')) {
-          console.log(`Encontrado PRODUCTOR en fila ${i}, col ${j} con valor: ${cellVal}`);
+        const cellVal = normalizeName(row[j]);
+        if (cellVal === 'PRODUCTOR' || cellVal === 'ORGANIZADOR' || cellVal.includes('PRODUCTOR')) {
+          console.log(`Encontrado PRODUCTOR/ORGANIZADOR en fila ${i}, col ${j} con valor: ${cellVal}`);
           headerRowIdx = i;
           producerColIdx = j;
         }
@@ -88,42 +91,67 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       if (headerRowIdx !== -1) break;
     }
 
-    // Forzar columna H si es Digna y no lo encontró bien
-    if (company === "Digna Seguros") {
-       producerColIdx = 7; // Columna H
-       console.log(`Forzando producerColIdx a 7 (Col H) para Digna Seguros.`);
-       // Si no encontró cabecera, asumimos la primera fila no vacía en la col H
-       if (headerRowIdx === -1) {
-          for(let i=0; i<data.length; i++) {
-             if(data[i][7]) { headerRowIdx = i; break; }
-          }
+    // Heurística de búsqueda si no encontró cabecera
+    if (producerColIdx === -1) {
+       console.log("No se encontró cabecera explícita, iniciando búsqueda heurística...");
+       const colScores = {};
+       for (let i = 0; i < Math.min(data.length, 50); i++) {
+         const row = data[i];
+         for (let j = 0; j < row.length; j++) {
+           if (!row[j]) continue;
+           const cellPure = normalizeName(row[j]);
+           if (cellPure.length < 4) continue;
+           
+           for (const p of allProducers) {
+             const dbPure = normalizeName(p.name);
+             if (dbPure.length > 3 && (cellPure.includes(dbPure) || dbPure.includes(cellPure))) {
+               colScores[j] = (colScores[j] || 0) + 1;
+               if (headerRowIdx === -1 || i < headerRowIdx) {
+                 headerRowIdx = i > 0 ? i - 1 : 0; // Asume que la cabecera está arriba
+               }
+               break;
+             }
+           }
+         }
+       }
+       let bestCol = -1;
+       let maxScore = 0;
+       for (const [col, score] of Object.entries(colScores)) {
+         if (score > maxScore) {
+           maxScore = score;
+           bestCol = parseInt(col);
+         }
+       }
+       if (bestCol !== -1) {
+         producerColIdx = bestCol;
+         console.log(`Columna heurística ganadora: ${producerColIdx} con score: ${maxScore}`);
+       } else if (company === "Digna Seguros") {
+         producerColIdx = 7; // Fallback extremo original
+         console.log(`Forzando producerColIdx a 7 (Col H) para Digna Seguros.`);
+         if (headerRowIdx === -1) {
+            for(let i=0; i<data.length; i++) {
+               if(data[i][7]) { headerRowIdx = i; break; }
+            }
+         }
        }
     }
 
-    if (headerRowIdx === -1) {
-       throw new Error("No se encontró la columna de productor en el archivo.");
+    if (headerRowIdx === -1) headerRowIdx = 0;
+    if (producerColIdx === -1) {
+       throw new Error("No se encontró la columna de productor en el archivo y falló la heurística.");
     }
 
     console.log(`headerRowIdx: ${headerRowIdx}, producerColIdx: ${producerColIdx}`);
 
-    // Solo mantenemos la fila de cabeceras para evitar problemas de formato al filtrar columnas
-    const preamble = [ data[headerRowIdx] ];
+    const preamble = [ data[headerRowIdx] || [] ];
     const dataRows = data.slice(headerRowIdx + 1);
 
     const groupedData = {};
     for (const row of dataRows) {
-      console.log(`Evaluando fila de datos:`, row);
-      if (row[producerColIdx] === undefined || row[producerColIdx] === "") {
-          console.log(`Saltando fila porque la columna ${producerColIdx} está vacía.`);
-          continue;
-      }
-      
+      if (row[producerColIdx] === undefined || row[producerColIdx] === "") continue;
       const producerName = String(row[producerColIdx]).trim().toUpperCase();
       if (!producerName) continue;
-
-      if (!groupedData[producerName]) {
-        groupedData[producerName] = [];
-      }
+      if (!groupedData[producerName]) groupedData[producerName] = [];
       groupedData[producerName].push(row);
     }
 
@@ -135,32 +163,22 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         user: 'claudiooscarayala@gmail.com',
         pass: 'reuxohirsyesrato' 
       },
-      tls: {
-        rejectUnauthorized: false
-      },
+      tls: { rejectUnauthorized: false },
       connectionTimeout: 20000,
       greetingTimeout: 20000,
       socketTimeout: 20000
     });
 
     let emailsSent = 0;
-    
-    // Cargar todos los productores una sola vez para búsqueda inteligente
-    const allProducers = db.prepare("SELECT name, email FROM producers").all();
-
     const emailTasks = [];
     
     for (const [producerName, rows] of Object.entries(groupedData)) {
-      // Extraer solo la parte del nombre, eliminando números, guiones y comas
-      const pureName = producerName.replace(/[0-9-]/g, '').replace(/,/g, '').trim();
-
-      // Búsqueda inteligente en memoria
+      const pureName = normalizeName(producerName);
       let email = null;
       for (const p of allProducers) {
         if (!p.email) continue;
-        const dbName = p.name.replace(/[0-9-]/g, '').replace(/,/g, '').trim();
-        // Si el nombre de la BD está incluido en el del Excel, o viceversa, lo damos por válido
-        if (pureName.includes(dbName) || dbName.includes(pureName)) {
+        const dbName = normalizeName(p.name);
+        if (dbName.length > 3 && (pureName.includes(dbName) || dbName.includes(pureName))) {
            email = p.email;
            break;
         }
@@ -170,20 +188,30 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         email = rows[0][emailColIdx];
       }
 
-      if (!email) {
-         continue; 
-      }
+      if (!email) continue; 
 
       let finalRows = [...preamble, ...rows];
 
       if (company === "Digna Seguros") {
-        // Filtrar columnas B(1), D(3), E(4), G(6), I(8), T(19)
-        const allowedIndices = [1, 3, 4, 6, 8, 19];
+        // Encontrar dinámicamente las columnas en lugar de usar índices duros
+        let colSeccion = 0, colPoliza = 2, colFecha = 6, colTomador = 10, colRiesgo = 18, colEstado = 25;
+        const headerRow = preamble[0];
+        for(let j=0; j<headerRow.length; j++) {
+           let h = String(headerRow[j]).trim().toUpperCase();
+           if (h.includes("SECCI")) colSeccion = j;
+           if (h.includes("LIZA") && !h.includes("SALDO")) colPoliza = j;
+           if (h.includes("VENCIMIENTO") && !h.includes("DESDE") && !h.includes("HASTA")) colFecha = j;
+           if (h.includes("TOMADOR")) colTomador = j;
+           if (h.includes("RIESGO")) colRiesgo = j;
+           if (h.includes("ESTADO") || h.includes("SALDO")) colEstado = j;
+        }
+        const allowedIndices = [colSeccion, colPoliza, colFecha, colTomador, colRiesgo, colEstado];
+        
         finalRows = finalRows.map((row, rowIndex) => {
            return allowedIndices.map((origIdx, outputIdx) => {
              let val = row[origIdx] !== undefined ? row[origIdx] : "";
-             // Formatear la fecha en la columna C del nuevo excel (que corresponde al índice 4 original), excepto si es la cabecera
-             if (origIdx === 4 && rowIndex > 0) {
+             // Formatear la fecha
+             if (outputIdx === 2 && rowIndex > 0) { // outputIdx 2 es colFecha
                 val = formatExcelDate(val);
              }
              return val;
