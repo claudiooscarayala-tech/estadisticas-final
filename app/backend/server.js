@@ -65,6 +65,23 @@ app.get("/api/download-db", (req, res) => {
   res.download(dbPath);
 });
 
+app.get("/api/reset-orders-now", (req, res) => {
+  try {
+    const db = require("./db");
+    db.transaction(() => {
+      const orders = db.prepare('SELECT product_id, COUNT(*) as quantity FROM store_orders GROUP BY product_id').all();
+      for (const order of orders) {
+        db.prepare('UPDATE store_products SET stock = stock + ? WHERE id = ?').run(order.quantity, order.product_id);
+      }
+      db.prepare('DELETE FROM store_orders').run();
+      db.prepare("DELETE FROM sqlite_sequence WHERE name='store_orders'").run();
+    })();
+    res.json({ success: true, message: "Todos los pedidos han sido eliminados y el stock ha sido restaurado a sus valores originales." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // --- Protected Endpoints ---
 app.use("/api/producers", authMiddleware, producersRoutes);
 app.use("/api/companies", authMiddleware, companiesRoutes);

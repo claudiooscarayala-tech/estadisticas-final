@@ -9,24 +9,6 @@ const { sendWhatsappMessage } = require("../services/whatsapp");
 
 const mpClient = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN });
 
-// Temporary endpoint to reset all orders and restore stock
-router.get("/reset-orders", (req, res) => {
-  try {
-    db.transaction(() => {
-      const orders = db.prepare('SELECT product_id, COUNT(*) as quantity FROM store_orders GROUP BY product_id').all();
-      for (const order of orders) {
-        db.prepare('UPDATE store_products SET stock = stock + ? WHERE id = ?').run(order.quantity, order.product_id);
-      }
-      db.prepare('DELETE FROM store_orders').run();
-      db.prepare("DELETE FROM sqlite_sequence WHERE name='store_orders'").run();
-    })();
-    res.json({ success: true, message: "Todos los pedidos han sido eliminados y el stock ha sido restaurado a sus valores originales." });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-
 const dataPath = process.env.DATA_PATH || path.join(__dirname, "..");
 const uploadsDir = path.join(dataPath, "uploads");
 if (!fs.existsSync(uploadsDir)) {
